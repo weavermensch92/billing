@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 224 71.4% 4.1%;
+  }
+
+  body {
+    @apply bg-gray-50 text-gray-900 antialiased;
+    font-family: 'Pretendard', system-ui, -apple-system, sans-serif;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-xl border border-gray-200 shadow-sm;
+  }
+
+  .badge-status-active    { @apply bg-green-100 text-green-700; }
+  .badge-status-pending   { @apply bg-yellow-100 text-yellow-700; }
+  .badge-status-suspended { @apply bg-red-100 text-red-700; }
+  .badge-status-invited   { @apply bg-blue-100 text-blue-700; }
+}

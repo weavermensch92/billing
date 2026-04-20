@@ -1,0 +1,86 @@
+{
+  "name": "@gridge-ai/aimsp-harness",
+  "version": "0.27.0",
+  "description": "Gridge AIMSP Harness — Claude Code rulebook for AiOPS + LucaPus + Wiring AI integrated platform",
+  "keywords": [
+    "claude-code",
+    "harness",
+    "rulebook",
+    "gridge",
+    "aimsp",
+    "ai-development",
+    "hitl",
+    "adaptation"
+  ],
+  "homepage": "https://github.com/gridge-ai/aimsp-harness#readme",
+  "bugs": {
+    "url": "https://github.com/gridge-ai/aimsp-harness/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gridge-ai/aimsp-harness.git"
+  },
+  "license": "UNLICENSED",
+  "author": {
+    "name": "SoftSquared Inc. (Gridge)",
+    "email": "engineering@gridge.ai",
+    "url": "https://gridge.ai"
+  },
+  "private": false,
+  "publishConfig": {
+    "access": "restricted",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "files": [
+    ".claude/**/*.md",
+    ".claude/**/*.yml",
+    "scripts/**",
+    "templates/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "main": "scripts/index.js",
+  "bin": {
+    "gridge-harness": "scripts/cli.js"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "demo": "node scripts/demo.js",
+    "demo:cmd": "cmd //c scripts\\demo.cmd",
+    "demo:sh": "bash scripts/demo.sh",
+    "install-harness": "node scripts/install.js",
+    "uninstall-harness": "node scripts/uninstall.js",
+    "upgrade-harness": "node scripts/upgrade.js",
+    "validate": "node scripts/validate.js",
+    "harness:test": "node scripts/test.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "peerDependencies": {
+    "@anthropic-ai/claude-code": ">=1.0.0"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.10.2",
+    "@supabase/supabase-js": "^2.103.3",
+    "next": "^14.2.35",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zustand": "^5.0.12"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.39",
+    "@types/react": "^18.3.28",
+    "@types/react-dom": "^18.3.7",
+    "autoprefixer": "^10.5.0",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.35",
+    "postcss": "^8.5.10",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^5.9.3"
+  }
+}

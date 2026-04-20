@@ -1,0 +1,56 @@
+Copyright (c) 2026 SoftSquared Inc. (Gridge)
+All rights reserved.
+
+PROPRIETARY AND CONFIDENTIAL — UNLICENSED
+
+This software and associated documentation files (the "Software") are the
+proprietary and confidential information of SoftSquared Inc. (operating under
+the brand name "Gridge"). The Software is made available under this license
+solely to authorized licensees under the terms of a separate written agreement
+with SoftSquared Inc.
+
+NO LICENSE IS GRANTED BY THIS FILE. The presence of this package on a public
+package registry does not constitute a grant of rights. Access to and use of
+the Software is restricted to the authorized licensees of SoftSquared Inc.
+
+PROHIBITED WITHOUT WRITTEN CONSENT:
+  - Copying, modifying, merging, publishing, distributing, sublicensing,
+    or selling copies of the Software.
+  - Creating derivative works based on the Software.
+  - Reverse engineering, decompiling, or disassembling the Software.
+  - Removing or obscuring any proprietary notices, labels, or marks.
+  - Using the Software for the benefit of any third party.
+
+PERMITTED USE FOR AUTHORIZED LICENSEES:
+  - Installation and use of the Software solely for internal development
+    operations within the licensee's organization.
+  - The rights granted are non-exclusive, non-transferable, and non-sublicensable.
+  - Use is subject to the terms of the separate written agreement, which
+    supersedes any conflicting terms.
+
+THIRD-PARTY COMPONENTS:
+This package may contain components subject to third-party licenses:
+  - Paperclip (MIT License) — orchestration engine base
+  - Various Node.js dependencies listed in package.json
+
+Use of these components remains subject to their respective licenses.
+
+NO WARRANTY:
+THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL
+SOFTSQUARED INC. BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT
+OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+TERMINATION:
+Any use of the Software not expressly authorized by a written agreement
+with SoftSquared Inc. is a violation of this license and may result in
+immediate termination of any rights granted, civil liability, and/or
+criminal penalties.
+
+CONTACT:
+SoftSquared Inc. (Gridge)
+engineering@gridge.ai
+https://gridge.ai
