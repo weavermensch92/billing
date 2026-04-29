@@ -1,7 +1,11 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const MOCK_MODE = process.env.NEXT_PUBLIC_MOCK_MODE === 'true'
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
+const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+// Vercel 데모/프리뷰 환경에서 Supabase env 미설정이면 자동 Mock — 미들웨어 throw 방지
+const MOCK_MODE =
+  process.env.NEXT_PUBLIC_MOCK_MODE === 'true' || !SUPABASE_URL || !SUPABASE_KEY
 const MOCK_COOKIE = 'dev_mock_user'
 
 export async function updateSession(request: NextRequest) {
@@ -44,8 +48,8 @@ export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    SUPABASE_URL!,
+    SUPABASE_KEY!,
     {
       cookies: {
         getAll() {
