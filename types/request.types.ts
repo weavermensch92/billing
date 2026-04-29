@@ -77,12 +77,18 @@ export const ACTION_TYPE_LABELS: Record<ActionType, { label: string; description
     description: '퇴사 멤버의 계정을 일괄 해지합니다.',
     icon: '👋',
   },
+  headroom_increase: {
+    label: '자율 승인 한도 증액',
+    description: '자율 승인 여유분 초과 요청을 위해 Super에게 한도 증액을 요청합니다.',
+    icon: '📈',
+  },
 }
 
 export const STATUS_LABELS: Record<RequestStatus, string> = {
   pending:           '대기',
   in_review:         '검토 중',
   awaiting_customer: '고객 확인 대기',
+  awaiting_headroom: '한도 증액 승인 대기',
   approved:          '승인됨',
   rejected:          '반려됨',
   completed:         '완료',
@@ -92,6 +98,7 @@ export const STATUS_LABELS: Record<RequestStatus, string> = {
 export const PATH_LABELS: Record<PathType, { label: string; color: string }> = {
   fast: { label: 'Fast Path', color: 'text-green-600' },
   full: { label: 'Full Path', color: 'text-blue-600' },
+  self: { label: 'Self-Approved', color: 'text-purple-600' },
 }
 
 // wizard에서 사용하는 Account 조인 타입 (클라이언트 컴포넌트 공유용)

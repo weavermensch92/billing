@@ -14,6 +14,7 @@ interface State {
   tier: 'monthly' | 'weekly' | 'prepaid_monthly'
   credit_limit_krw: number
   deposit_krw: number
+  self_approval_headroom_krw: number  // Admin 자율 승인 월간 한도
   creditback_start_at: string  // YYYY-MM-DD
   monthly_fee_krw: number
   contract_start_at: string
@@ -48,6 +49,7 @@ export function NewOrgWizard() {
     tier: 'monthly',
     credit_limit_krw: 5_000_000,
     deposit_krw: 0,
+    self_approval_headroom_krw: 0,
     creditback_start_at: today,
     monthly_fee_krw: 0,
     contract_start_at: today,
@@ -201,6 +203,24 @@ export function NewOrgWizard() {
               </div>
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                자율 승인 한도 (월간)
+              </label>
+              <input
+                type="number"
+                min={0}
+                max={100_000_000}
+                step={500_000}
+                value={state.self_approval_headroom_krw}
+                onChange={e => update('self_approval_headroom_krw', Number(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                {formatKrw(state.self_approval_headroom_krw)} · 현재 {state.self_approval_headroom_krw === 0 ? '비활성' : '활성'} — Admin이 AM 경유 없이 이 금액 내 요청을 즉시 승인 가능. 매월 1일 리셋.
+              </p>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">계약 시작일</label>
@@ -309,6 +329,14 @@ export function NewOrgWizard() {
                   <div className="flex justify-between"><dt className="text-gray-500">예치금</dt><dd className="font-mono">{formatKrw(state.deposit_krw)}</dd></div>
                   <div className="flex justify-between"><dt className="text-gray-500">계약 기간</dt><dd>{state.contract_start_at} ~ {state.contract_end_at}</dd></div>
                   <div className="flex justify-between"><dt className="text-gray-500">크레딧백 시작</dt><dd>{state.creditback_start_at} (6개월)</dd></div>
+                  <div className="flex justify-between">
+                    <dt className="text-gray-500">자율 승인 한도 (월간)</dt>
+                    <dd className="font-mono">
+                      {state.self_approval_headroom_krw === 0
+                        ? <span className="text-gray-400">비활성</span>
+                        : formatKrw(state.self_approval_headroom_krw)}
+                    </dd>
+                  </div>
                 </dl>
               </div>
 

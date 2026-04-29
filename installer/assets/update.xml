@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!--
+  Chrome Extension Update Manifest (offline / self-hosted)
+
+  installer 가 이 파일을 %ProgramFiles%\Gridge\BillingHelper\update.xml 에 복사.
+  Chrome/Edge 가 정기적으로 이 파일을 읽어 새 버전 확인.
+
+  배포:
+    - Phase 0: file:/// URL (로컬 파일 기반, 업데이트 없이 고정 버전)
+    - Phase 1: https://extensions.gridge.ai/update.xml (서버 호스팅, 자동 업데이트)
+
+  {EXTENSION_ID} 자리에 pack-crx.mjs 출력 ID 를 빌드 스크립트가 치환.
+  {CODEBASE}    자리에 crx 파일의 실제 URL 을 치환.
+-->
+<gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>
+  <app appid='{EXTENSION_ID}'>
+    <updatecheck
+      codebase='{CODEBASE}'
+      version='0.1.0' />
+  </app>
+</gupdate>

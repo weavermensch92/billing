@@ -1,0 +1,196 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  width: 360px;
+  min-height: 200px;
+  max-height: 600px;
+  background: #f9fafb;
+  color: #1f2937;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+#app {
+  padding: 12px;
+}
+
+.header {
+  padding: 10px 12px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: white;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+.header-title { font-weight: 700; font-size: 14px; }
+.header-sub   { font-size: 11px; opacity: 0.85; margin-top: 2px; }
+
+.url-badge {
+  padding: 6px 10px;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 6px;
+  font-size: 11px;
+  color: #1e40af;
+  margin-bottom: 10px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.url-badge code {
+  background: none;
+  font-family: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 10px;
+}
+.ctx-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  flex-shrink: 0;
+}
+.ctx-personal   { background: #e5e7eb; color: #374151; }
+.ctx-team       { background: #dbeafe; color: #1e40af; }
+.ctx-enterprise { background: #fef3c7; color: #92400e; }
+.ctx-none       { background: #f3f4f6; color: #9ca3af; }
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.list-loading {
+  text-align: center;
+  padding: 20px;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.vcn-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.vcn-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+.service-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: #111827;
+}
+.service-vendor {
+  font-size: 10px;
+  color: #9ca3af;
+  text-transform: capitalize;
+}
+.vcn-last4 {
+  font-family: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 12px;
+  color: #4b5563;
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.vcn-meta {
+  font-size: 11px;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+.vcn-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.btn {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 120ms ease;
+  font-weight: 500;
+}
+.btn-primary {
+  background: #2563eb;
+  color: white;
+  flex: 1;
+}
+.btn-primary:hover { background: #1d4ed8; }
+.btn-secondary {
+  background: white;
+  color: #374151;
+  border-color: #d1d5db;
+}
+.btn-secondary:hover { background: #f3f4f6; }
+.btn-text {
+  background: transparent;
+  color: #6b7280;
+  padding: 4px 6px;
+  font-size: 11px;
+}
+.btn-text:hover { color: #111827; }
+
+.card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+}
+.card h2 {
+  font-size: 15px;
+  margin-bottom: 8px;
+  color: #111827;
+}
+.card p { margin-bottom: 12px; }
+.card a.btn { display: inline-block; text-decoration: none; margin-right: 8px; }
+
+.footer {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.muted { color: #6b7280; }
+.small { font-size: 11px; }
+code {
+  background: #f3f4f6;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-family: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11px;
+}
+kbd {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-bottom-width: 2px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: inherit;
+  font-size: 10px;
+}
+
+.status {
+  padding: 8px 10px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.status-info    { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+.status-success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+.status-error   { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }

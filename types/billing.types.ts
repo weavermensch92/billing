@@ -29,6 +29,10 @@ export interface Org {
   creditback_end_at: string | null
   deposit_remaining_krw: number
   credit_limit_krw: number
+  // Super가 할당한 월간 자율 승인 한도 (Admin/Owner가 AM 경유 없이 즉시 승인 가능)
+  self_approval_headroom_krw: number
+  self_approval_used_krw: number
+  self_approval_reset_at: string
   aiops_org_id: string | null
   created_at: string
   updated_at: string
@@ -88,6 +92,11 @@ export interface OrgContract {
 export type ServiceCategory = 'subscription' | 'api' | 'agent_credit' | 'other'
 export type TosReviewStatus = 'approved' | 'conditional' | 'rejected' | 'pending'
 export type PricingPolicy = 'passthrough' | 'cost_plus_2pct' | 'fixed_markup_10k'
+export type RegistrationApiMode =
+  | 'admin_api'         // 벤더 Admin API 직결 (Anthropic, OpenAI Enterprise)
+  | 'extension_assist'  // Gridge Chrome Extension 으로 클립보드 복사
+  | 'manual'            // AM 1Password 수동 공유 (ChatGPT Plus 등 conditional)
+  | 'browser_bot'       // Playwright 서버 자동화 (Phase 1+)
 
 export interface Service {
   idx: number
@@ -101,6 +110,7 @@ export interface Service {
   tos_next_review_at: string | null
   pricing_policy: PricingPolicy
   is_anthropic_partnership: boolean
+  registration_api_mode?: RegistrationApiMode
   unit_price_usd: number | null
   unit_price_krw: number | null
   is_active: boolean
@@ -260,12 +270,13 @@ export interface AuditLog {
 export type ActionType =
   | 'new_account' | 'terminate' | 'limit_change'
   | 'vcn_replace' | 'decline_response' | 'bulk_terminate'
+  | 'headroom_increase'
 
 export type RequestStatus =
-  | 'pending' | 'in_review' | 'awaiting_customer'
+  | 'pending' | 'in_review' | 'awaiting_customer' | 'awaiting_headroom'
   | 'approved' | 'rejected' | 'completed' | 'cancelled'
 
-export type PathType = 'fast' | 'full'
+export type PathType = 'fast' | 'full' | 'self'
 
 export interface ActionRequest {
   idx: number
@@ -284,6 +295,13 @@ export interface ActionRequest {
   parent_id: string | null
   resolved_at: string | null
   resolved_by: string | null
+  // Self-approval 확장
+  estimated_cost_krw: number
+  self_approved_by: string | null
+  self_approved_at: string | null
+  // 자동 연쇄형 partial coverage (Super 증액 승인 대기)
+  headroom_shortfall_krw: number
+  reserved_headroom_krw: number
   created_at: string
   updated_at: string
   // Join (optional — nullable from left join)

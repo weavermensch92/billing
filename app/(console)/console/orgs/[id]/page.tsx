@@ -23,11 +23,15 @@ export default async function OrgDetailPage({
   searchParams,
 }: {
   params: { id: string }
-  searchParams: { tab?: string; created?: string }
+  searchParams: { tab?: string; created?: string; headroom_updated?: string; error?: string }
 }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/console/login')
+
+  const { data: adminUser } = await supabase
+    .from('admin_users').select('role').eq('email', user.email ?? '').eq('is_active', true).single()
+  const isSuper = adminUser?.role === 'super'
 
   const { data: org } = await supabase
     .from('orgs')
@@ -63,6 +67,16 @@ export default async function OrgDetailPage({
         <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
           조직이 등록되었습니다. Owner 초대 이메일을 Luna에게 요청하세요.
           현재 status는 <strong>pending</strong>이며 Owner 가입 완료 시 자동 <strong>active</strong> 전환됩니다.
+        </div>
+      )}
+      {searchParams.headroom_updated && (
+        <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
+          자율 승인 한도가 변경되었습니다. 감사 로그에 기록되었습니다.
+        </div>
+      )}
+      {searchParams.error && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          {searchParams.error}
         </div>
       )}
 
@@ -149,6 +163,69 @@ export default async function OrgDetailPage({
                 <dd className="font-medium mt-0.5">{formatDate(orgData.created_at)}</dd>
               </div>
             </dl>
+          </div>
+
+          {/* 자율 승인 한도 (Self-Approval Headroom) */}
+          <div className="card p-6">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h2 className="text-base font-semibold text-gray-900">자율 승인 한도</h2>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Admin이 AM 경유 없이 이 범위 내 요청을 즉시 승인 가능 · 매월 1일 리셋
+                </p>
+              </div>
+              {isSuper && (
+                <Link
+                  href={`/console/orgs/${params.id}/headroom`}
+                  className="text-xs font-medium px-3 py-1.5 border border-brand-600 text-brand-600 rounded hover:bg-brand-50"
+                >
+                  한도 조정
+                </Link>
+              )}
+            </div>
+
+            {(() => {
+              const headroom = orgData.self_approval_headroom_krw ?? 0
+              const used = orgData.self_approval_used_krw ?? 0
+              const remaining = Math.max(0, headroom - used)
+              const usedPct = headroom > 0 ? Math.round((used / headroom) * 100) : 0
+              return (
+                <>
+                  <dl className="grid grid-cols-3 gap-4 text-sm mb-4">
+                    <div>
+                      <dt className="text-gray-500">월간 한도</dt>
+                      <dd className="font-semibold font-mono mt-0.5">{formatKrw(headroom)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-gray-500">이번 달 사용</dt>
+                      <dd className="font-semibold font-mono mt-0.5">{formatKrw(used)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-gray-500">남은 여유분</dt>
+                      <dd className={`font-semibold font-mono mt-0.5 ${remaining > 0 ? 'text-green-700' : 'text-gray-400'}`}>
+                        {formatKrw(remaining)}
+                      </dd>
+                    </div>
+                  </dl>
+                  {headroom > 0 && (
+                    <div>
+                      <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${usedPct >= 90 ? 'bg-red-500' : usedPct >= 70 ? 'bg-orange-500' : 'bg-green-500'}`}
+                          style={{ width: `${Math.min(usedPct, 100)}%` }}
+                        />
+                      </div>
+                      <p className="mt-1 text-xs text-gray-500">사용률 {usedPct}%</p>
+                    </div>
+                  )}
+                  {headroom === 0 && (
+                    <p className="text-sm text-gray-500 italic">
+                      비활성 상태 — Super가 한도를 할당하면 Admin 자율 승인이 활성화됩니다.
+                    </p>
+                  )}
+                </>
+              )
+            })()}
           </div>
         </div>
       )}

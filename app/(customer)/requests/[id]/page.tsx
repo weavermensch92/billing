@@ -5,7 +5,8 @@ import { StatusBadge } from '@/components/ui/status-badge'
 import { MessageThread } from '@/components/customer/message-thread'
 import { formatDateTime } from '@/lib/utils/format'
 import { ACTION_TYPE_LABELS } from '@/types/request.types'
-import { sendMessage, confirmCustomerAction } from './actions'
+import { sendMessage, confirmCustomerAction, approveSelfByAdmin } from './actions'
+import { formatKrw } from '@/lib/utils/format'
 import type { ActionRequest } from '@/types/billing.types'
 import type { RequestEvent, RequestMessage } from '@/types/request.types'
 
@@ -31,7 +32,7 @@ export default async function RequestDetailPage({
   searchParams,
 }: {
   params: { id: string }
-  searchParams: { created?: string }
+  searchParams: { created?: string; self?: string; self_approved?: string; error?: string }
 }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -45,11 +46,17 @@ export default async function RequestDetailPage({
     .single()
   if (!member) redirect('/login')
 
-  const [requestRes, eventsRes, messagesRes] = await Promise.all([
+  const [requestRes, eventsRes, messagesRes, orgRes] = await Promise.all([
     supabase.from('action_requests').select('*').eq('id', params.id).single(),
     supabase.from('request_events').select('*').eq('request_id', params.id).order('created_at'),
     supabase.from('request_messages').select('*').eq('request_id', params.id).order('created_at'),
+    supabase.from('orgs').select('self_approval_headroom_krw, self_approval_used_krw').eq('id', member.org_id).single(),
   ])
+
+  const headroomRow = (orgRes.data as { self_approval_headroom_krw?: number; self_approval_used_krw?: number } | null) ?? {}
+  const headroomKrw = headroomRow.self_approval_headroom_krw ?? 0
+  const headroomUsed = headroomRow.self_approval_used_krw ?? 0
+  const remainingKrw = Math.max(0, headroomKrw - headroomUsed)
 
   if (!requestRes.data) notFound()
 
@@ -60,15 +67,38 @@ export default async function RequestDetailPage({
   const info = ACTION_TYPE_LABELS[request.action_type]
   const canConfirm = request.status === 'awaiting_customer' && request.requester_id === member.id
 
+  // Admin/Owner가 pending 요청을 즉시 승인할 수 있는지
+  const isPrivileged = member.role === 'owner' || member.role === 'admin'
+  const cost = request.estimated_cost_krw ?? 0
+  const canSelfApprove = isPrivileged
+    && request.status === 'pending'
+    && headroomKrw > 0
+    && cost <= remainingKrw
+
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <Link href="/requests" className="text-sm text-gray-500 hover:text-gray-700">
         ← 요청 내역
       </Link>
 
-      {searchParams.created && (
+      {searchParams.created && !searchParams.self && (
         <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
           요청이 제출되었습니다. Luna가 검토 후 진행합니다.
+        </div>
+      )}
+      {searchParams.self === '1' && (
+        <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
+          <strong>자율 승인 완료</strong> — 요청이 즉시 승인되었습니다. VCN 발급 등 후속 작업은 AM이 진행합니다.
+        </div>
+      )}
+      {searchParams.self_approved === '1' && (
+        <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
+          <strong>즉시 승인 처리됨</strong> — 자율 승인 한도에서 차감되었으며 AM 큐에 승인된 요청으로 전달됩니다.
+        </div>
+      )}
+      {searchParams.error && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          {searchParams.error}
         </div>
       )}
 
@@ -85,6 +115,35 @@ export default async function RequestDetailPage({
           </div>
           <StatusBadge status={request.status} />
         </div>
+
+        {canSelfApprove && (
+          <div className="mt-6 p-4 bg-green-50 border-2 border-green-300 rounded-lg">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-semibold text-green-900">즉시 승인 가능</p>
+                <p className="text-sm text-green-700 mt-1">
+                  예상 월 비용 <strong className="font-mono">{formatKrw(cost)}</strong>
+                  {' — '}
+                  자율 승인 한도 내입니다 (잔여 <strong className="font-mono">{formatKrw(remainingKrw)}</strong>).
+                </p>
+                <p className="text-xs text-green-600 mt-1">
+                  AM 검토 없이 바로 승인하면 Luna는 VCN 발급 등 후속 실행만 담당합니다.
+                </p>
+              </div>
+            </div>
+            <form action={approveSelfByAdmin} className="mt-3 flex gap-2">
+              <input type="hidden" name="request_id" value={request.id} />
+              <button
+                type="submit"
+                className="bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg"
+              >
+                바로 승인하기
+              </button>
+              <span className="flex-1" />
+              <span className="text-xs text-gray-500 self-center">또는 AM 검토를 기다립니다</span>
+            </form>
+          </div>
+        )}
 
         {canConfirm && (
           <div className="mt-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">

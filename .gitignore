@@ -39,6 +39,16 @@ next-env.d.ts
 .claude/issue/*.md
 .context/issue/*.md
 
+# Extension artifacts (NEVER commit private key)
+extension/key.pem
+extension/dist/
+extension/artifacts/
+extension/node_modules/
+
+# Installer build output
+installer/output/
+installer/work/
+
 # IDE
 .vscode/
 .idea/

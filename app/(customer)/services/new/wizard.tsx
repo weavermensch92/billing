@@ -4,6 +4,7 @@ import { useState, useMemo, useTransition } from 'react'
 import { createRequest } from './actions'
 import { ACTION_TYPE_LABELS } from '@/types/request.types'
 import { formatKrw } from '@/lib/utils/format'
+import { estimateRequestCost } from '@/lib/billing/estimate-cost'
 import type { ActionType } from '@/types/billing.types'
 import type { WizardAccount } from '@/types/request.types'
 
@@ -14,6 +15,8 @@ interface WizardProps {
   members: { id: string; name: string; email: string; role: string }[]
   accounts: WizardAccount[]
   currentMemberRole: 'owner' | 'admin' | 'member'
+  headroomKrw: number
+  headroomRemainingKrw: number
 }
 
 type Step = 1 | 2 | 3 | 4 | 5
@@ -32,6 +35,7 @@ const ACTION_TYPES_AVAILABLE: ActionType[] = [
 
 export function RequestWizard({
   initialType, initialAccountId, services, members, accounts, currentMemberRole,
+  headroomKrw, headroomRemainingKrw,
 }: WizardProps) {
   const [step, setStep] = useState<Step>(initialType ? 2 : 1)
   const [actionType, setActionType] = useState<ActionType | null>(initialType ?? null)
@@ -77,11 +81,24 @@ export function RequestWizard({
     return true
   }
 
-  const onSubmit = () => {
+  // 현재 요청의 예상 월 비용 증가분 (self-approval 판정용)
+  const estimatedCostKrw = useMemo(() => {
+    if (!actionType) return 0
+    const rd: Record<string, unknown> = {}
+    if (actionType === 'new_account') rd.monthly_limit_krw = monthlyLimit
+    if (actionType === 'limit_change') rd.new_limit_krw = newLimit
+    return estimateRequestCost(actionType, rd, selectedAccount?.monthly_limit_krw)
+  }, [actionType, monthlyLimit, newLimit, selectedAccount])
+
+  const isPrivileged = currentMemberRole === 'owner' || currentMemberRole === 'admin'
+  const canSelfApprove = isPrivileged && headroomKrw > 0 && estimatedCostKrw <= headroomRemainingKrw
+
+  const submit = (selfApprove: boolean) => {
     if (!actionType) return
     const fd = new FormData()
     fd.set('action_type', actionType)
     if (amMessage) fd.set('am_message', amMessage)
+    if (selfApprove) fd.set('self_approve', 'true')
 
     if (actionType === 'new_account') {
       fd.set('service_id', serviceId!)
@@ -105,6 +122,7 @@ export function RequestWizard({
 
     startTransition(() => { createRequest(fd) })
   }
+  const onSubmit = () => submit(false)
 
   return (
     <div className="space-y-6">
@@ -446,8 +464,39 @@ export function RequestWizard({
                 </div>
               )}
             </dl>
+
+            {/* 자율 승인 가능 여부 배너 */}
+            {headroomKrw > 0 && estimatedCostKrw > 0 && (
+              <div className={`p-4 rounded-lg border ${
+                canSelfApprove ? 'bg-green-50 border-green-200' : 'bg-orange-50 border-orange-200'
+              }`}>
+                <div className="flex items-start justify-between mb-2">
+                  <p className={`text-sm font-medium ${canSelfApprove ? 'text-green-900' : 'text-orange-900'}`}>
+                    {canSelfApprove ? '자율 승인 가능' : '자율 승인 한도 초과'}
+                  </p>
+                  <span className="text-xs font-mono text-gray-600">예상 월 +{formatKrw(estimatedCostKrw)}</span>
+                </div>
+                <div className="text-xs space-y-0.5">
+                  <p className={canSelfApprove ? 'text-green-700' : 'text-orange-700'}>
+                    자율 승인 잔여: <strong className="font-mono">{formatKrw(headroomRemainingKrw)}</strong>
+                    {canSelfApprove && <> → 소진 후 <strong className="font-mono">{formatKrw(headroomRemainingKrw - estimatedCostKrw)}</strong></>}
+                  </p>
+                  {!isPrivileged && (
+                    <p className="text-gray-600">
+                      Member는 즉시 승인 불가 — Owner/Admin이 요청 확인 후 즉시 승인할 수 있습니다.
+                    </p>
+                  )}
+                  {!canSelfApprove && isPrivileged && (
+                    <p className="text-orange-700">
+                      비용이 여유분을 초과하므로 AM 검토가 필요합니다.
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
             <p className="text-xs text-gray-500">
-              제출 후 Luna가 검토하여 진행하며, 진행 상황은 요청 내역 페이지에서 확인할 수 있습니다.
+              AM 요청 경로: 제출 후 Luna가 검토 후 진행. 진행 상황은 요청 내역에서 확인 가능.
             </p>
           </div>
         )}
@@ -469,6 +518,23 @@ export function RequestWizard({
             >
               다음 →
             </button>
+          ) : canSelfApprove ? (
+            <div className="flex gap-3">
+              <button
+                onClick={onSubmit}
+                disabled={pending}
+                className="border border-gray-300 text-gray-700 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-50 disabled:text-gray-300"
+              >
+                AM에 요청 제출
+              </button>
+              <button
+                onClick={() => submit(true)}
+                disabled={pending}
+                className="bg-brand-600 hover:bg-brand-700 disabled:bg-gray-300 text-white text-sm font-medium px-6 py-2 rounded-lg transition-colors"
+              >
+                {pending ? '처리 중...' : '즉시 승인하고 제출'}
+              </button>
+            </div>
           ) : (
             <button
               onClick={onSubmit}

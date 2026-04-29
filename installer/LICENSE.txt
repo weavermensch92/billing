@@ -1,0 +1,24 @@
+Gridge Billing Fill Helper
+Copyright (c) 2026 SoftSquared Inc. (Gridge)
+
+PROPRIETARY - INTERNAL USE ONLY
+
+본 소프트웨어는 Gridge Billing MSP 계약 고객의 AI 서비스 결제 페이지에서
+가상카드(VCN) 번호를 안전하게 복사하기 위한 목적으로 제공됩니다.
+
+이 확장은 Windows 정책 관리자(HKLM ExtensionInstallForcelist)를 통해 설치되며,
+Chrome/Edge 에서 "귀하의 조직에서 관리합니다" 배지가 표시됩니다.
+
+이 설치 프로그램은 다음 작업을 수행합니다:
+  1. %ProgramFiles%\Gridge\BillingHelper\ 에 파일 복사
+  2. HKLM\Software\Policies\Google\Chrome\ExtensionInstallForcelist 에 항목 추가
+     (Edge 선택 시 Microsoft\Edge 에도 동일)
+  3. 확장이 Chrome/Edge 재시작 후 자동 설치됨
+
+제거:
+  - 제어판 → 프로그램 제거 → "Gridge Billing Fill Helper"
+  - 레지스트리 항목이 제거되고 확장이 자동 언로드됩니다
+
+이 소프트웨어의 재배포, 역공학, 수정은 Gridge 와의 별도 계약 없이 금지됩니다.
+
+문의: engineering@gridge.ai

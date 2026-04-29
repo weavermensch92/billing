@@ -21,7 +21,7 @@ export default async function NewRequestPage({
     .single()
   if (!member) redirect('/login')
 
-  const [servicesRes, membersRes, accountsRes] = await Promise.all([
+  const [servicesRes, membersRes, accountsRes, orgRes] = await Promise.all([
     supabase.from('services').select('id, name, vendor, category, tos_review_status, unit_price_krw')
       .in('tos_review_status', ['approved','conditional'])
       .eq('is_active', true)
@@ -31,7 +31,13 @@ export default async function NewRequestPage({
     supabase.from('accounts')
       .select('id, status, monthly_limit_krw, service:services!service_id(name, vendor), member:members!member_id(name)')
       .eq('org_id', member.org_id).eq('status', 'active'),
+    supabase.from('orgs').select('self_approval_headroom_krw, self_approval_used_krw').eq('id', member.org_id).single(),
   ])
+
+  const headroom = (orgRes.data as { self_approval_headroom_krw?: number; self_approval_used_krw?: number } | null) ?? {}
+  const headroomKrw = headroom.self_approval_headroom_krw ?? 0
+  const headroomUsed = headroom.self_approval_used_krw ?? 0
+  const remainingKrw = Math.max(0, headroomKrw - headroomUsed)
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -55,6 +61,8 @@ export default async function NewRequestPage({
         members={membersRes.data ?? []}
         accounts={(accountsRes.data ?? []) as unknown as WizardAccount[]}
         currentMemberRole={member.role as 'owner' | 'admin' | 'member'}
+        headroomKrw={headroomKrw}
+        headroomRemainingKrw={remainingKrw}
       />
     </div>
   )

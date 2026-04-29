@@ -1,0 +1,80 @@
+{
+  "manifest_version": 3,
+  "name": "Gridge Billing Fill Helper",
+  "short_name": "Gridge Fill",
+  "version": "0.1.0",
+  "description": "AI 서비스 결제 페이지에서 Gridge VCN 카드번호를 안전하게 복사합니다. (Stripe iframe은 수동 붙여넣기)",
+
+  "permissions": [
+    "clipboardWrite",
+    "storage",
+    "activeTab"
+  ],
+
+  "host_permissions": [
+    "https://claude.ai/*",
+    "https://console.anthropic.com/*",
+    "https://platform.openai.com/*",
+    "https://chatgpt.com/*",
+    "https://chat.openai.com/*",
+    "https://cursor.com/*",
+    "https://cursor.sh/*",
+    "https://www.cursor.com/*",
+    "https://github.com/*",
+    "https://www.perplexity.ai/*",
+    "http://localhost:3000/*",
+    "https://app.gridge.ai/*"
+  ],
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Gridge Billing Fill Helper",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+
+  "content_scripts": [
+    {
+      "matches": [
+        "https://claude.ai/*/billing*",
+        "https://claude.ai/organization/*",
+        "https://console.anthropic.com/*/billing*",
+        "https://console.anthropic.com/settings/*",
+        "https://platform.openai.com/*/billing*",
+        "https://platform.openai.com/*/organization/*",
+        "https://chatgpt.com/*/billing*",
+        "https://chatgpt.com/admin/*",
+        "https://cursor.com/*/billing*",
+        "https://cursor.com/team/*",
+        "https://www.cursor.com/*/billing*",
+        "https://www.cursor.com/team/*",
+        "https://github.com/settings/billing*",
+        "https://github.com/organizations/*/settings/billing*",
+        "https://github.com/enterprises/*/settings/billing*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "web_accessible_resources": [
+    {
+      "resources": ["icons/*.png"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

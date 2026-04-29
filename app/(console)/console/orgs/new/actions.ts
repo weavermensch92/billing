@@ -32,6 +32,7 @@ export async function createOrg(formData: FormData) {
   const tier = formData.get('tier') as 'monthly' | 'weekly' | 'prepaid_monthly'
   const credit_limit_krw = Math.max(0, Math.min(10_000_000_000, Number(formData.get('credit_limit_krw')) || 0))
   const deposit_krw = Math.max(0, Math.min(10_000_000_000, Number(formData.get('deposit_krw')) || 0))
+  const self_approval_headroom_krw = Math.max(0, Math.min(1_000_000_000, Number(formData.get('self_approval_headroom_krw')) || 0))
   const creditback_start_at = formData.get('creditback_start_at') as string
   const contract_start_at = formData.get('contract_start_at') as string
   const contract_end_at = formData.get('contract_end_at') as string
@@ -76,6 +77,9 @@ export async function createOrg(formData: FormData) {
   const creditback_end_at = cbEnd.toISOString().slice(0, 10)
 
   // 1) orgs 생성
+  const thisMonthStart = new Date()
+  thisMonthStart.setDate(1)
+  thisMonthStart.setHours(0, 0, 0, 0)
   const { data: org, error: orgErr } = await supabase.from('orgs').insert({
     name,
     business_reg_no,
@@ -87,6 +91,9 @@ export async function createOrg(formData: FormData) {
     creditback_end_at,
     deposit_remaining_krw: deposit_krw,
     credit_limit_krw,
+    self_approval_headroom_krw,
+    self_approval_used_krw: 0,
+    self_approval_reset_at: thisMonthStart.toISOString(),
     aiops_org_id: null,
   }).select('id').single()
 
@@ -144,6 +151,7 @@ export async function createOrg(formData: FormData) {
       tier,
       creditback_start_at,
       creditback_end_at,
+      self_approval_headroom_krw,
       owner_email,
     },
   })

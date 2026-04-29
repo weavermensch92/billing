@@ -5,7 +5,7 @@ import { StatusBadge } from '@/components/ui/status-badge'
 import { AdminMessageThread } from '@/components/console/admin-message-thread'
 import { formatDateTime } from '@/lib/utils/format'
 import { ACTION_TYPE_LABELS } from '@/types/request.types'
-import { decidePath, updateRequestStatus, updateProgressState, sendAdminMessage } from './actions'
+import { decidePath, updateRequestStatus, updateProgressState, sendAdminMessage, setVcnLast4 } from './actions'
 import type { ActionRequest, ActionType } from '@/types/billing.types'
 import type { RequestEvent, RequestMessage } from '@/types/request.types'
 
@@ -49,6 +49,11 @@ const CHECKLIST_TEMPLATES: Record<ActionType, { key: string; label: string }[]> 
     { key: 'child_requests',     label: '자식 요청 일괄 생성' },
     { key: 'waiver_expired',     label: '7일 유예 경과' },
     { key: 'all_terminated',     label: '전체 해지 완료' },
+  ],
+  headroom_increase: [
+    { key: 'parent_reviewed',    label: '부모 요청 검토 (initiator 목적/금액 확인)' },
+    { key: 'shortfall_verified', label: '증액 금액 타당성 확인' },
+    { key: 'decision_recorded',  label: '승인/거부 결정 기록' },
   ],
 }
 
@@ -260,24 +265,55 @@ export default async function ConsoleRequestDetailPage({ params }: { params: { i
           </div>
           <div className="p-4 space-y-2">
             {checklist.map(item => (
-              <form key={item.key} action={updateProgressState}>
-                <input type="hidden" name="request_id" value={request.id} />
-                <input type="hidden" name="key" value={item.key} />
-                <input type="hidden" name="value" value={String(!progress[item.key])} />
-                <button
-                  type="submit"
-                  className="w-full flex items-start gap-2 p-2 hover:bg-gray-50 rounded text-left text-sm"
-                >
-                  <span className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${
-                    progress[item.key] ? 'bg-green-600 border-green-600 text-white text-xs' : 'border-gray-300'
-                  }`}>
-                    {progress[item.key] && '✓'}
-                  </span>
-                  <span className={progress[item.key] ? 'line-through text-gray-400' : 'text-gray-700'}>
-                    {item.label}
-                  </span>
-                </button>
-              </form>
+              <div key={item.key}>
+                <form action={updateProgressState}>
+                  <input type="hidden" name="request_id" value={request.id} />
+                  <input type="hidden" name="key" value={item.key} />
+                  <input type="hidden" name="value" value={String(!progress[item.key])} />
+                  <button
+                    type="submit"
+                    className="w-full flex items-start gap-2 p-2 hover:bg-gray-50 rounded text-left text-sm"
+                  >
+                    <span className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${
+                      progress[item.key] ? 'bg-green-600 border-green-600 text-white text-xs' : 'border-gray-300'
+                    }`}>
+                      {progress[item.key] && '✓'}
+                    </span>
+                    <span className={progress[item.key] ? 'line-through text-gray-400' : 'text-gray-700'}>
+                      {item.label}
+                    </span>
+                  </button>
+                </form>
+
+                {/* vcn_issued / old_vcn_revoked 단계에서 card_last4 입력 */}
+                {(item.key === 'vcn_issued' || item.key === 'backup_issued') && (
+                  <form action={setVcnLast4} className="ml-6 mt-1 flex gap-2 items-center">
+                    <input type="hidden" name="request_id" value={request.id} />
+                    <span className="text-xs text-gray-500">카드 끝 4자리:</span>
+                    <input
+                      type="text"
+                      name="vcn_last4"
+                      inputMode="numeric"
+                      pattern="[0-9]{4}"
+                      maxLength={4}
+                      defaultValue={(request.progress_state as { vcn_last4?: string }).vcn_last4 ?? ''}
+                      placeholder="1234"
+                      className="w-20 px-2 py-1 border border-gray-300 rounded text-xs font-mono text-center"
+                    />
+                    <button
+                      type="submit"
+                      className="text-xs text-brand-600 hover:underline"
+                    >
+                      저장
+                    </button>
+                    {(request.progress_state as { vcn_last4?: string }).vcn_last4 && (
+                      <span className="text-xs text-green-600">
+                        ✓ {(request.progress_state as { vcn_last4?: string }).vcn_last4}
+                      </span>
+                    )}
+                  </form>
+                )}
+              </div>
             ))}
           </div>
         </div>

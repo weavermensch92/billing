@@ -14,6 +14,9 @@ const TWO_MONTHS_AGO = new Date(NOW.getFullYear(), NOW.getMonth() - 2, 1).toISOS
 // ─── 조직 ─────────────────────────────────────────────────
 export const ORG_ID = '00000000-0000-0000-0000-000000000001'
 
+// 이번 달 1일 (월간 리셋 기준점)
+const THIS_MONTH_START = new Date(NOW.getFullYear(), NOW.getMonth(), 1).toISOString()
+
 export const MOCK_ORGS = [
   {
     idx: 1,
@@ -28,6 +31,10 @@ export const MOCK_ORGS = [
     creditback_end_at: daysAhead(105).slice(0, 10),
     deposit_remaining_krw: 0,
     credit_limit_krw: 10000000,
+    // Super가 할당한 월 ₩2M 자율 승인 한도, 이번달 ₩450K 소진 → 잔액 ₩1.55M
+    self_approval_headroom_krw: 2000000,
+    self_approval_used_krw: 450000,
+    self_approval_reset_at: THIS_MONTH_START,
     aiops_org_id: null,
     created_at: daysAgo(90),
     updated_at: daysAgo(1),
@@ -144,8 +151,8 @@ export const SERVICE_IDS = {
 }
 
 export const MOCK_SERVICES = [
-  { idx: 1, id: SERVICE_IDS.claude_team,  name: 'Claude Team', vendor: 'anthropic', category: 'subscription', tos_review_status: 'approved', tos_review_note: null, tos_reviewed_at: daysAgo(30).slice(0,10), tos_next_review_at: daysAhead(60).slice(0,10), pricing_policy: 'passthrough', is_anthropic_partnership: true,  unit_price_usd: 30,  unit_price_krw: 41000, is_active: true, created_at: daysAgo(200), updated_at: daysAgo(30) },
-  { idx: 2, id: SERVICE_IDS.chatgpt_team, name: 'ChatGPT Team', vendor: 'openai', category: 'subscription', tos_review_status: 'approved', tos_review_note: null, tos_reviewed_at: daysAgo(30).slice(0,10), tos_next_review_at: daysAhead(60).slice(0,10), pricing_policy: 'passthrough', is_anthropic_partnership: false, unit_price_usd: 25,  unit_price_krw: 34000, is_active: true, created_at: daysAgo(200), updated_at: daysAgo(30) },
+  { idx: 1, id: SERVICE_IDS.claude_team,  name: 'Claude Team', vendor: 'anthropic', category: 'subscription', tos_review_status: 'approved', tos_review_note: null, tos_reviewed_at: daysAgo(30).slice(0,10), tos_next_review_at: daysAhead(60).slice(0,10), pricing_policy: 'passthrough', is_anthropic_partnership: true, registration_api_mode: 'admin_api',  unit_price_usd: 30,  unit_price_krw: 41000, is_active: true, created_at: daysAgo(200), updated_at: daysAgo(30) },
+  { idx: 2, id: SERVICE_IDS.chatgpt_team, name: 'ChatGPT Team', vendor: 'openai', category: 'subscription', tos_review_status: 'approved', tos_review_note: null, tos_reviewed_at: daysAgo(30).slice(0,10), tos_next_review_at: daysAhead(60).slice(0,10), pricing_policy: 'passthrough', is_anthropic_partnership: false, registration_api_mode: 'admin_api', unit_price_usd: 25,  unit_price_krw: 34000, is_active: true, created_at: daysAgo(200), updated_at: daysAgo(30) },
   { idx: 3, id: SERVICE_IDS.cursor_biz,   name: 'Cursor Business', vendor: 'cursor', category: 'subscription', tos_review_status: 'approved', tos_review_note: null, tos_reviewed_at: daysAgo(30).slice(0,10), tos_next_review_at: daysAhead(60).slice(0,10), pricing_policy: 'passthrough', is_anthropic_partnership: false, unit_price_usd: 40,  unit_price_krw: 54000, is_active: true, created_at: daysAgo(200), updated_at: daysAgo(30) },
   { idx: 4, id: SERVICE_IDS.claude_api,   name: 'Claude API', vendor: 'anthropic', category: 'api', tos_review_status: 'approved', tos_review_note: null, tos_reviewed_at: daysAgo(30).slice(0,10), tos_next_review_at: daysAhead(60).slice(0,10), pricing_policy: 'passthrough', is_anthropic_partnership: true,  unit_price_usd: null, unit_price_krw: null, is_active: true, created_at: daysAgo(200), updated_at: daysAgo(30) },
   { idx: 5, id: SERVICE_IDS.copilot,      name: 'GitHub Copilot Business', vendor: 'github', category: 'subscription', tos_review_status: 'approved', tos_review_note: null, tos_reviewed_at: daysAgo(30).slice(0,10), tos_next_review_at: daysAhead(60).slice(0,10), pricing_policy: 'passthrough', is_anthropic_partnership: false, unit_price_usd: 19, unit_price_krw: 26000, is_active: true, created_at: daysAgo(200), updated_at: daysAgo(30) },
@@ -331,7 +338,9 @@ export const MOCK_REQUESTS = [
     path_type: null, account_id: null, member_id: MEMBER_IDS.charlie,
     progress_state: {}, request_data: { service_id: SERVICE_IDS.cursor_biz, monthly_limit_krw: 300000, allow_overseas: true, purpose: 'IDE 전환 — Copilot → Cursor' },
     assigned_to: null, sla_deadline: daysAhead(3), parent_id: null,
-    resolved_at: null, resolved_by: null, created_at: daysAgo(1), updated_at: daysAgo(1),
+    resolved_at: null, resolved_by: null,
+    estimated_cost_krw: 300000, self_approved_by: null, self_approved_at: null,
+    created_at: daysAgo(1), updated_at: daysAgo(1),
   },
   {
     idx: 2, id: REQUEST_IDS.req2_review, org_id: ORG_ID,
@@ -339,7 +348,9 @@ export const MOCK_REQUESTS = [
     path_type: 'fast', account_id: ACCOUNT_IDS.bob_chatgpt, member_id: null,
     progress_state: { approval_path: true }, request_data: { new_limit_krw: 500000 },
     assigned_to: ADMIN_IDS.luna, sla_deadline: daysAhead(2), parent_id: null,
-    resolved_at: null, resolved_by: null, created_at: daysAgo(2), updated_at: daysAgo(0),
+    resolved_at: null, resolved_by: null,
+    estimated_cost_krw: 100000, self_approved_by: null, self_approved_at: null,
+    created_at: daysAgo(2), updated_at: daysAgo(0),
   },
   {
     idx: 3, id: REQUEST_IDS.req3_await, org_id: ORG_ID,
@@ -348,16 +359,20 @@ export const MOCK_REQUESTS = [
     progress_state: { primary_suspended: true, backup_issued: true, service_updated: true, onepw_shared: true },
     request_data: { reason: '카드사 결제 차단 의심 — Copilot 거절' },
     assigned_to: ADMIN_IDS.luna, sla_deadline: daysAhead(1), parent_id: null,
-    resolved_at: null, resolved_by: null, created_at: daysAgo(3), updated_at: daysAgo(0),
+    resolved_at: null, resolved_by: null,
+    estimated_cost_krw: 0, self_approved_by: null, self_approved_at: null,
+    created_at: daysAgo(3), updated_at: daysAgo(0),
   },
   {
     idx: 4, id: REQUEST_IDS.req4_done, org_id: ORG_ID,
     requester_id: MEMBER_IDS.alice, action_type: 'new_account', status: 'completed',
-    path_type: 'fast', account_id: ACCOUNT_IDS.alice_cursor, member_id: MEMBER_IDS.alice,
+    path_type: 'self', account_id: ACCOUNT_IDS.alice_cursor, member_id: MEMBER_IDS.alice,
     progress_state: { tos_reviewed: true, limit_approved: true, vcn_issued: true, vcn_registered: true, onepw_shared: true, customer_confirm: true },
     request_data: { service_id: SERVICE_IDS.cursor_biz, monthly_limit_krw: 300000, allow_overseas: true, purpose: 'IDE' },
     assigned_to: ADMIN_IDS.luna, sla_deadline: daysAgo(77), parent_id: null,
-    resolved_at: daysAgo(80), resolved_by: ADMIN_IDS.luna, created_at: daysAgo(82), updated_at: daysAgo(80),
+    resolved_at: daysAgo(80), resolved_by: ADMIN_IDS.luna,
+    estimated_cost_krw: 300000, self_approved_by: MEMBER_IDS.alice, self_approved_at: daysAgo(82),
+    created_at: daysAgo(82), updated_at: daysAgo(80),
   },
   {
     idx: 5, id: REQUEST_IDS.req5_decline, org_id: ORG_ID,
@@ -366,7 +381,9 @@ export const MOCK_REQUESTS = [
     progress_state: { cause_identified: true, vcn_reconfigured: false, customer_notified: true, retry_confirmed: false },
     request_data: { decline_context: 'Copilot 연속 결제 거절, 원인 파악 필요' },
     assigned_to: ADMIN_IDS.luna, sla_deadline: daysAhead(0), parent_id: null,
-    resolved_at: null, resolved_by: null, created_at: daysAgo(1), updated_at: daysAgo(0),
+    resolved_at: null, resolved_by: null,
+    estimated_cost_krw: 0, self_approved_by: null, self_approved_at: null,
+    created_at: daysAgo(1), updated_at: daysAgo(0),
   },
 ]
 
