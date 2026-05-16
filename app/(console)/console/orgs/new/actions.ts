@@ -39,7 +39,7 @@ export async function createOrg(formData: FormData) {
 
   if (!adminUser) redirect('/console/login')
   if (adminUser.role !== 'super') {
-    redirect('/console/orgs?error=' + encodeURIComponent('Super 권한이 필요합니다.'))
+    redirect('/console/orgs?error=' + encodeURIComponent(`Org 생성 권한 없음 — Super 전용 (현재 역할: ${adminUser.role})`))
   }
 
   // Input 정규화 (Step 1~2 기존 + Step 3 v2 신규 + Step 4 owner)

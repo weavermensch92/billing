@@ -10,10 +10,23 @@ interface OrgWithStats extends Org {
   _active_accounts?: number
 }
 
-export default async function OrgsPage() {
+export default async function OrgsPage({
+  searchParams,
+}: {
+  searchParams: { error?: string }
+}) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/console/login')
+
+  // 신규 등록은 super만 가능 (orgs/new/page.tsx · createOrg 액션과 동일 규칙)
+  const { data: adminUser } = await supabase
+    .from('admin_users')
+    .select('role')
+    .eq('email', user.email ?? '')
+    .eq('is_active', true)
+    .maybeSingle()
+  const canCreate = adminUser?.role === 'super'
 
   const { data: orgs } = await supabase
     .from('orgs')
@@ -24,16 +37,31 @@ export default async function OrgsPage() {
 
   return (
     <div className="space-y-6">
+      {searchParams.error && (
+        <div className="border-l-[3px] border-l-red-500 pl-3 py-2 text-sm text-red-700 bg-red-50">
+          {decodeURIComponent(searchParams.error)}
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">고객사 관리</h1>
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-500">총 {orgList.length}개사</span>
-          <Link
-            href="/console/orgs/new"
-            className="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg"
-          >
-            + 신규 등록
-          </Link>
+          {canCreate ? (
+            <Link
+              href="/console/orgs/new"
+              className="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg"
+            >
+              + 신규 등록
+            </Link>
+          ) : (
+            <span
+              className="text-xs text-gray-400"
+              title={`Super 권한 필요 (현재 역할: ${adminUser?.role ?? 'unknown'})`}
+            >
+              신규 등록은 Super 권한 필요
+            </span>
+          )}
         </div>
       </div>
 

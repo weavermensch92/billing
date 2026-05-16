@@ -34,7 +34,8 @@ export default async function NewOrgPage({
   if (!adminUser) redirect('/console/login')
 
   if (adminUser.role !== 'super') {
-    redirect('/console/home?error=' + encodeURIComponent('Org 생성 권한 없음 (super only)'))
+    // 사용자가 클릭하고 온 컨텍스트(orgs 목록)로 되돌리고 사유를 명시. 액션의 동일 게이트와 일치시킴.
+    redirect('/console/orgs?error=' + encodeURIComponent(`Org 생성 권한 없음 — Super 전용 (현재 역할: ${adminUser.role})`))
   }
 
   return (
