@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { StatCard } from '@/components/ui/stat-card'
 import { formatKrw, formatDate, formatBillingMonth } from '@/lib/utils/format'
+import { resendInvite } from './members/actions'
 import type { Org, Member, Account, Invoice, ActionRequest } from '@/types/billing.types'
 
 const TABS = ['overview', 'accounts', 'transactions', 'invoices', 'requests', 'members'] as const
@@ -23,7 +24,7 @@ export default async function OrgDetailPage({
   searchParams,
 }: {
   params: { id: string }
-  searchParams: { tab?: string; created?: string; headroom_updated?: string; error?: string }
+  searchParams: { tab?: string; created?: string; headroom_updated?: string; error?: string; ok?: string }
 }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -72,6 +73,11 @@ export default async function OrgDetailPage({
       {searchParams.headroom_updated && (
         <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
           자율 승인 한도가 변경되었습니다. 감사 로그에 기록되었습니다.
+        </div>
+      )}
+      {searchParams.ok && (
+        <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
+          {searchParams.ok}
         </div>
       )}
       {searchParams.error && (
@@ -288,31 +294,72 @@ export default async function OrgDetailPage({
 
       {/* 멤버 탭 */}
       {activeTab === 'members' && (
-        <div className="card overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">이름</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">이메일</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">역할</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">상태</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {members.map(m => (
-                <tr key={m.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-3 font-medium">{m.name}</td>
-                  <td className="px-6 py-3 text-gray-600">{m.email}</td>
-                  <td className="px-6 py-3">
-                    <span className={`text-xs font-medium ${m.role === 'owner' ? 'text-brand-600' : 'text-gray-600'}`}>
-                      {m.role === 'owner' ? 'Owner' : m.role === 'admin' ? 'Admin' : 'Member'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3"><StatusBadge status={m.status} /></td>
+        <div className="space-y-3">
+          {isSuper && (
+            <div className="flex justify-end">
+              <Link
+                href={`/console/orgs/${params.id}/members/new`}
+                className="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium rounded-lg transition-colors"
+              >
+                + 멤버 초대
+              </Link>
+            </div>
+          )}
+          <div className="card overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50">
+                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">이름</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">이메일</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">역할</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">상태</th>
+                  {isSuper && <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase">작업</th>}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {members.length === 0 && (
+                  <tr>
+                    <td colSpan={isSuper ? 5 : 4} className="px-6 py-8 text-center text-sm text-gray-400">
+                      등록된 멤버가 없습니다. {isSuper && '오른쪽 위의 "+ 멤버 초대" 버튼으로 추가하세요.'}
+                    </td>
+                  </tr>
+                )}
+                {members.map(m => {
+                  const isPending = m.status === 'invited' && !m.user_id
+                  return (
+                    <tr key={m.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-3 font-medium">{m.name}</td>
+                      <td className="px-6 py-3 text-gray-600">{m.email}</td>
+                      <td className="px-6 py-3">
+                        <span className={`text-xs font-medium ${m.role === 'owner' ? 'text-brand-600' : 'text-gray-600'}`}>
+                          {m.role === 'owner' ? 'Owner' : m.role === 'admin' ? 'Admin' : 'Member'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-3"><StatusBadge status={m.status} /></td>
+                      {isSuper && (
+                        <td className="px-6 py-3 text-right">
+                          {isPending ? (
+                            <form action={resendInvite} className="inline">
+                              <input type="hidden" name="org_id" value={params.id} />
+                              <input type="hidden" name="member_id" value={m.id} />
+                              <button
+                                type="submit"
+                                className="text-xs text-brand-600 hover:text-brand-700 hover:underline"
+                              >
+                                초대 재발송
+                              </button>
+                            </form>
+                          ) : (
+                            <span className="text-xs text-gray-300">—</span>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
