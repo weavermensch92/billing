@@ -37,6 +37,7 @@ const store: Record<string, unknown[]> = {
   export_jobs:              [...MOCK_EXPORT_JOBS],
   anomaly_events:           [...MOCK_ANOMALY_EVENTS],
   offboarding_events:       [],
+  slack_integration:        [],
 }
 
 type Row = Record<string, unknown>
