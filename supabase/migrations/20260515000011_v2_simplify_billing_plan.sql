@@ -13,23 +13,27 @@
 -- 컬럼 자체 DROP은 별도 (UI·코드 정리 후 v2.1 권장)
 
 -- ─── 1. 기존 CHECK 제약 식별 + DROP ──────────────────────
+-- 주의: PostgreSQL 은 `CHECK (plan IN (...))` 를 내부적으로
+--      `CHECK ((plan = ANY (ARRAY[...])))` 로 정규화 저장한다.
+--      따라서 LIKE '%IN%' 패턴으로는 매칭 안 됨 → 컬럼명 기준으로 광범위 매칭.
+--      v2 제약 자신은 제외하여 idempotent 재실행 안전.
 DO $$
 DECLARE
-  v_constraint_name TEXT;
+  v_name TEXT;
 BEGIN
-  -- CHECK 제약 이름 찾기 (postgres 자동 생성명 또는 명시명)
-  SELECT con.conname INTO v_constraint_name
+  FOR v_name IN
+    SELECT con.conname
     FROM pg_constraint con
-    JOIN pg_class c ON c.oid = con.conrelid
+    JOIN pg_class c     ON c.oid = con.conrelid
     JOIN pg_namespace n ON n.oid = c.relnamespace
     WHERE n.nspname = 'billing'
       AND c.relname = 'orgs'
       AND con.contype = 'c'
-      AND pg_get_constraintdef(con.oid) LIKE '%plan%IN%';
-
-  IF v_constraint_name IS NOT NULL THEN
-    EXECUTE format('ALTER TABLE billing.orgs DROP CONSTRAINT %I', v_constraint_name);
-  END IF;
+      AND con.conname <> 'orgs_plan_check_v2'
+      AND pg_get_constraintdef(con.oid) ILIKE '%plan%'
+  LOOP
+    EXECUTE format('ALTER TABLE billing.orgs DROP CONSTRAINT %I', v_name);
+  END LOOP;
 END $$;
 
 
@@ -37,10 +41,21 @@ END $$;
 UPDATE billing.orgs SET plan = 'prepaid_v2' WHERE plan IS DISTINCT FROM 'prepaid_v2';
 
 
--- ─── 3. 새 CHECK (단일값) ────────────────────────────────
-ALTER TABLE billing.orgs
-  ADD CONSTRAINT orgs_plan_check_v2
-    CHECK (plan = 'prepaid_v2');
+-- ─── 3. 새 CHECK (단일값, idempotent) ────────────────────
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint con
+    JOIN pg_class c     ON c.oid = con.conrelid
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'billing'
+      AND c.relname = 'orgs'
+      AND con.conname = 'orgs_plan_check_v2'
+  ) THEN
+    ALTER TABLE billing.orgs
+      ADD CONSTRAINT orgs_plan_check_v2 CHECK (plan = 'prepaid_v2');
+  END IF;
+END $$;
 
 
 -- ─── 4. DEFAULT 변경 + DEPRECATED ────────────────────────
