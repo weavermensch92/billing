@@ -3,7 +3,7 @@ import { adminLogin } from './actions'
 export default function ConsoleLoginPage({
   searchParams,
 }: {
-  searchParams: { error?: string; step?: string }
+  searchParams: { error?: string; message?: string; step?: string }
 }) {
   const step = searchParams.step ?? '1'
 
@@ -16,6 +16,11 @@ export default function ConsoleLoginPage({
         </div>
 
         <div className="bg-gray-800 rounded-xl border border-gray-700 p-8">
+          {searchParams.message && (
+            <div className="mb-4 p-3 bg-green-900/30 border border-green-700 rounded-lg text-sm text-green-400">
+              {searchParams.message}
+            </div>
+          )}
           {searchParams.error && (
             <div className="mb-4 p-3 bg-red-900/30 border border-red-700 rounded-lg text-sm text-red-400">
               {searchParams.error}
@@ -57,6 +62,11 @@ export default function ConsoleLoginPage({
                   다음 (2FA 인증)
                 </button>
               </form>
+              <p className="text-xs text-gray-400 text-center mt-4">
+                <a href="/console/reset-password/request" className="hover:text-gray-200 hover:underline">
+                  비밀번호를 잊으셨나요?
+                </a>
+              </p>
             </>
           ) : (
             <>
