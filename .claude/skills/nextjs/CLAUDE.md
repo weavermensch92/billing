@@ -1,6 +1,6 @@
 # Skills — Next.js 14
 
-> Wiring 프론트엔드 / Wiring 웹 UI / AiOPS 대시보드 공통 프레임워크.
+> Wiring 프론트엔드 / Wiring 웹 UI / AI Observer 대시보드 공통 프레임워크.
 > **가이드 문서** (규칙 아님). 최신 docs: https://nextjs.org
 
 ---

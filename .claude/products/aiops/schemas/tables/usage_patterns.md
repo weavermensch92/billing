@@ -1,4 +1,4 @@
-# AiOPS / Schemas / usage_patterns — 테이블 본문
+# AI Observer / Schemas / usage_patterns — 테이블 본문
 
 > 일간 사용 패턴 집계. maturity_scores 계산의 원본 데이터. PA-010.
 

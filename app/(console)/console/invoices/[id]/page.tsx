@@ -92,7 +92,7 @@ export default async function ConsoleInvoiceDetailPage({
           <h3 className="text-sm font-semibold text-orange-900 mb-3">📋 월말 검수 체크리스트</h3>
           <ul className="space-y-1 text-sm text-orange-800">
             <li>□ 결제 내역 {txList.length}건 확인 ({txList.filter(t => t.status === 'settled').length}건 승인)</li>
-            <li>□ 교차 검증: AiOPS usage ↔ Billing transactions 오차 &lt; 0.5%</li>
+            <li>□ 교차 검증: AI Observer usage ↔ Billing transactions 오차 &lt; 0.5%</li>
             <li>□ Anthropic 패스스루 적용 건수: {passthroughCount}건</li>
             <li>□ 크레딧백 자동 계산 확인 ({formatKrw(inv.credit_amount)})</li>
             {inv.requires_super_approval && <li className="font-semibold">□ Super 2차 승인 (고액 ≥ ₩10M)</li>}

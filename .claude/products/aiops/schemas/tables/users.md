@@ -1,6 +1,6 @@
-# AiOPS / Schemas / users — 테이블 본문
+# AI Observer / Schemas / users — 테이블 본문
 
-> AiOPS 사용자. 3단 권한 (super_admin / admin_teams / member).
+> AI Observer 사용자. 3단 권한 (super_admin / admin_teams / member).
 
 ---
 

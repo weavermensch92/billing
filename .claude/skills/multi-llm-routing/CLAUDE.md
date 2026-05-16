@@ -1,6 +1,6 @@
 # Skills — Multi-LLM Routing
 
-> 하네스 AI (PL-004) 의 모델 배정 + AiOPS 프록시 벤더 라우팅.
+> 하네스 AI (PL-004) 의 모델 배정 + AI Observer 프록시 벤더 라우팅.
 > Claude / GPT / Gemini / Solar / Ollama / vLLM.
 
 ---
@@ -185,4 +185,4 @@ Mode C 에서 고객 API rate limit 초과 시 **Gridge 키로 fallback 금지**
 - G-032 멀티 LLM 원칙: `02_architecture.md § 12`
 - Mode C API 키: `05_infra_mode.md § 8` (G-088)
 - 세션 배지: `products/wiring/rules/session_badge.md` (PW-010)
-- AiOPS 벤더별 채널: `products/aiops/channels/*.md`
+- AI Observer 벤더별 채널: `products/aiops/channels/*.md`

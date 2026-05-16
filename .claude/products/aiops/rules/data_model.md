@@ -1,6 +1,6 @@
-# AiOPS / Data Model — 규칙 본문
+# AI Observer / Data Model — 규칙 본문
 
-> PA-001 본문. AiOPS의 핵심 데이터 모델 (logs / users / orgs) 스키마 정의.
+> PA-001 본문. AI Observer의 핵심 데이터 모델 (logs / users / orgs) 스키마 정의.
 > Sprint 1 로그 수집 인프라의 출발점.
 
 ---
@@ -50,7 +50,7 @@ CREATE TABLE users (
   email       text NOT NULL,
   team        text,                             -- 팀 이름 (자유 텍스트)
 
-  -- AiOPS 3단 권한 (PA-004)
+  -- AI Observer 3단 권한 (PA-004)
   role        text NOT NULL DEFAULT 'member'
               CHECK (role IN ('super_admin','admin_teams','member')),
   admin_teams text[] DEFAULT ARRAY[]::text[],   -- admin_teams 역할일 때만 사용

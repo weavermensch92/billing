@@ -1,13 +1,13 @@
-# AiOPS / Auth — 규칙 본문
+# AI Observer / Auth — 규칙 본문
 
-> PA-004 본문. AiOPS 고유의 **3단 권한 체계**.
+> PA-004 본문. AI Observer 고유의 **3단 권한 체계**.
 > Wiring의 6단 위계(OA/L1/L2/L3/L4/super)와 다르므로 주의.
 
 ---
 
 ## PA-004 — 3단 권한 구조 (MUST)
 
-AiOPS는 "AI 사용 모니터링" 도메인 특성상 더 단순한 3단 권한:
+AI Observer는 "AI 사용 모니터링" 도메인 특성상 더 단순한 3단 권한:
 
 | 역할 | 범위 | 주 기능 |
 |---|---|---|
@@ -17,13 +17,13 @@ AiOPS는 "AI 사용 모니터링" 도메인 특성상 더 단순한 3단 권한:
 
 ### Wiring 위계와의 매핑 (G-048)
 
-| AiOPS 역할 | Wiring 위계 (통합 고객사일 때) |
+| AI Observer 역할 | Wiring 위계 (통합 고객사일 때) |
 |---|---|
 | super_admin | 슈퍼 어드민 (Gridge 운영) |
 | admin_teams | OA (Org Admin) 또는 L1~L2 |
 | member | L3~L4 |
 
-단, AiOPS를 **단독 판매** 하는 고객은 Wiring 위계와 무관. 3단만 사용.
+단, AI Observer를 **단독 판매** 하는 고객은 Wiring 위계와 무관. 3단만 사용.
 
 ---
 
@@ -192,22 +192,22 @@ OA: "김팀장을 Backend팀 admin_teams로 승격"
 
 ## PA-004-06 — SSO 매핑 (G-046 연동)
 
-Okta / Azure AD 그룹 → AiOPS 역할 매핑:
+Okta / Azure AD 그룹 → AI Observer 역할 매핑:
 
 ```yaml
 # .context/sso_mapping.yml (OA가 관리)
 sso_provider: okta
 role_mapping:
-  'AiOPS Super Admins':  super_admin
-  'AiOPS Team Leads':    admin_teams
-  'AiOPS Users':         member
+  'AI Observer Super Admins':  super_admin
+  'AI Observer Team Leads':    admin_teams
+  'AI Observer Users':         member
 
 team_mapping_field: 'department'  # SSO 속성에서 팀 이름 추출
 ```
 
 ### SCIM 프로비저닝
 
-- 사용자 생성/비활성/역할 변경을 SSO → AiOPS 자동 동기화
+- 사용자 생성/비활성/역할 변경을 SSO → AI Observer 자동 동기화
 - 주기: 즉시 (이벤트 기반) + 매 1시간 전체 스윕
 
 ---
@@ -267,7 +267,7 @@ INSERT INTO audit_logs (
 
 체인 실행 중 아래 감지 시 Conflict 자동 발동:
 
-- [ ] Wiring 위계(L1~L4)를 AiOPS 역할로 혼용?
+- [ ] Wiring 위계(L1~L4)를 AI Observer 역할로 혼용?
 - [ ] member 가 다른 사용자의 로그를 조회 가능?
 - [ ] admin_teams 가 담당 팀 외 데이터 접근 가능?
 - [ ] super_admin 권한을 클라이언트 조건 분기로 제어 (G-052 위반)?

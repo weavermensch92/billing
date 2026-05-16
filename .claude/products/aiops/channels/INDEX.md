@@ -1,4 +1,4 @@
-# AiOPS / Channels — INDEX
+# AI Observer / Channels — INDEX
 
 > PA-005 (채널 카탈로그) 의 세부 구현 파일 인덱스.
 > Sprint 1/2/3 순차 진행 (PA-005 정합).

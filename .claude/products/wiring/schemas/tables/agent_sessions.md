@@ -67,7 +67,7 @@ CREATE INDEX idx_agent_sessions_running ON agent_sessions(agent_id, status)
      └─(오류)→ [failed]
 ```
 
-## 토큰 비용 계산 (I-004 AiOPS 브릿지)
+## 토큰 비용 계산 (I-004 AI Observer 브릿지)
 
 ```sql
 -- 월별 Wiring 에이전트 비용 집계 → Billing usage_snapshots 매핑

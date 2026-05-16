@@ -1,6 +1,6 @@
 # Wiring / Schemas / orgs — 테이블 본문
 
-> Wiring 고객 조직. AiOPS / Billing 과는 별개 테이블 (product-level separation G-091-06).
+> Wiring 고객 조직. AI Observer / Billing 과는 별개 테이블 (product-level separation G-091-06).
 
 ---
 
@@ -31,7 +31,7 @@ CREATE TABLE orgs (
                    CHECK (status IN ('active','suspended','terminated')),
   
   -- 연계 (다른 제품)
-  aiops_org_id     UUID,     -- AiOPS 동일 고객
+  aiops_org_id     UUID,     -- AI Observer 동일 고객
   billing_org_id   UUID,     -- Billing 동일 고객
   
   created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -78,11 +78,11 @@ CREATE POLICY "orgs_member_select"
 ## 연계 (Cross-product)
 
 ```sql
--- AiOPS + Wiring 병행 고객 조회
+-- AI Observer + Wiring 병행 고객 조회
 SELECT w.* FROM wiring.orgs w
 WHERE w.aiops_org_id IS NOT NULL;
 
--- 3제품 전체 (AiOPS + Billing + Wiring)
+-- 3제품 전체 (AI Observer + Billing + Wiring)
 SELECT w.* FROM wiring.orgs w
 WHERE w.aiops_org_id IS NOT NULL AND w.billing_org_id IS NOT NULL;
 ```
@@ -94,5 +94,5 @@ WHERE w.aiops_org_id IS NOT NULL AND w.billing_org_id IS NOT NULL;
 - 디자인 원칙: `rules/design.md` (PW-001)
 - 6단 위계: `products/wiring/schemas/tables/users.md`
 - Mode 경계: `rules/05_infra_mode.md` (G-080~091)
-- I-001 AiOPS 연동: `integrations/aiops-wiring.md`
+- I-001 AI Observer 연동: `integrations/aiops-wiring.md`
 - Billing 연동 (I-005): `integrations/billing-wiring.md`

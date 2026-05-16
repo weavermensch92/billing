@@ -1,6 +1,6 @@
 # Skills — Chrome Extension (Manifest V3)
 
-> AiOPS 브라우저 익스텐션 (PA-006, extension_web) 개발 참조.
+> AI Observer 브라우저 익스텐션 (PA-006, extension_web) 개발 참조.
 > Chrome / Edge 공용. Firefox 는 별도 수정 필요.
 
 ---
@@ -24,7 +24,7 @@ extension/
 ```json
 {
   "manifest_version": 3,
-  "name": "Gridge AiOPS",
+  "name": "Gridge AI Observer",
   "version": "1.0.0",
   
   "permissions": [
@@ -187,7 +187,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 ## 참조
 
-- AiOPS 확장 규칙: `products/aiops/rules/extension.md` (PA-006)
+- AI Observer 확장 규칙: `products/aiops/rules/extension.md` (PA-006)
 - 웹 채널 구현: `products/aiops/channels/extension_web.md`
 - G-143 암호화: `08_security.md § 4`
 - G-150 시크릿 노출 금지: `08_security.md § 9`

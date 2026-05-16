@@ -1,6 +1,6 @@
-# AiOPS / On-Premise — 규칙 본문
+# AI Observer / On-Premise — 규칙 본문
 
-> PA-011 본문. 엔터프라이즈 고객을 위한 AiOPS 온프레미스 배포.
+> PA-011 본문. 엔터프라이즈 고객을 위한 AI Observer 온프레미스 배포.
 > Mode B 고객 전용. 데이터가 고객 서버를 벗어나지 않는 설치.
 
 ---
@@ -168,11 +168,11 @@ volumes:
 Mode B 고객은 자체 SSO (AD FS / Ping / 사내 Okta)를 쓰기 일쑤:
 
 ```
-사용자 → AiOPS Frontend → Keycloak → 고객 SSO → 고객 IdP
+사용자 → AI Observer Frontend → Keycloak → 고객 SSO → 고객 IdP
 ```
 
 - Keycloak이 protocol 변환 (SAML ↔ OIDC)
-- AiOPS 자체는 Keycloak OIDC만 신뢰
+- AI Observer 자체는 Keycloak OIDC만 신뢰
 
 ### 로컬 관리자 계정
 
@@ -249,8 +249,8 @@ aiops-export-YYYY-MM-DD.zip
 온프레미스 배포에서도 Gridge 내부 용어 **UI 노출 금지** (G-004):
 
 금지:
-- "AI 옵저버" (대신 "AiOPS")
-- "Paperclip" / "LucaPus" (AiOPS 단독 판매 시엔 애초에 미사용)
+- "AI 옵저버" (대신 "AI Observer")
+- "Paperclip" / "LucaPus" (AI Observer 단독 판매 시엔 애초에 미사용)
 - "mitmproxy 프록시" 같은 기술 디테일 (UI는 "네트워크 수집 설정")
 
 ---

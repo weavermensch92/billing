@@ -1,7 +1,7 @@
 # Skills — Supabase
 
 > DB (Postgres) + Auth + Storage + Realtime.
-> Wiring / AiOPS 백엔드 공통. Mode A/C 는 Gridge managed, Mode B 는 고객 self-hosted.
+> Wiring / AI Observer 백엔드 공통. Mode A/C 는 Gridge managed, Mode B 는 고객 self-hosted.
 
 ---
 
@@ -178,4 +178,4 @@ const claims = {
 - G-144 RLS: `08_security.md § 5`
 - 위계: `03_hierarchy.md`
 - Wiring schemas INDEX: `products/wiring/schemas/INDEX.md`
-- AiOPS schemas INDEX: `products/aiops/schemas/INDEX.md`
+- AI Observer schemas INDEX: `products/aiops/schemas/INDEX.md`

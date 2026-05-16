@@ -1,6 +1,6 @@
-# AiOPS / Schemas / audit_logs — 테이블 본문
+# AI Observer / Schemas / audit_logs — 테이블 본문
 
-> AiOPS 내부 감사 로그. Immutable (G-141 공통 정책). Billing audit_logs 와는 **물리적 별도 테이블** (G-091-06).
+> AI Observer 내부 감사 로그. Immutable (G-141 공통 정책). Billing audit_logs 와는 **물리적 별도 테이블** (G-091-06).
 
 ---
 
@@ -63,10 +63,10 @@ Billing 의 PB-005 와 동일 원칙:
 ## Billing 과의 분리 (G-091-06)
 
 동일 이름 `audit_logs` 지만 **물리적 별도 테이블** (schema 분리):
-- `aiops.audit_logs` — AiOPS 작업 이력
+- `aiops.audit_logs` — AI Observer 작업 이력
 - `billing.audit_logs` — Billing 작업 이력
 
-한 고객이 AiOPS + Billing (Mode A + D) 병행 시:
+한 고객이 AI Observer + Billing (Mode A + D) 병행 시:
 - 두 audit_logs 테이블 각각 기록
 - `orgs.billing_org_id` 로 교차 참조 가능
 - 감사 시 양쪽 통합 뷰 가능 (v_full_audit_combined, 필요 시 Phase 2)

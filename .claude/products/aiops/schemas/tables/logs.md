@@ -1,4 +1,4 @@
-# AiOPS / Schemas / logs — 테이블 본문
+# AI Observer / Schemas / logs — 테이블 본문
 
 > 모든 AI 호출 로그. 프록시 + 익스텐션 + 크롤러 수집 통합. PA-001 + PA-003 (비동기 로깅).
 

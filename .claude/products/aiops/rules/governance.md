@@ -1,7 +1,7 @@
-# AiOPS / Governance — 규칙 본문
+# AI Observer / Governance — 규칙 본문
 
 > PA-007, PA-008 본문. 민감 정보 감지 / 이상 탐지 / 직원 고지 / 대시보드 인사이트.
-> AiOPS가 "거버넌스 플랫폼"으로 팔리는 핵심 기능.
+> AI Observer가 "거버넌스 플랫폼"으로 팔리는 핵심 기능.
 
 ---
 
@@ -145,7 +145,7 @@ async function refineWithLLM(text: string, regexMatches: PIIMatch[]) {
 # AI 사용 모니터링 고지서
 
 [조직명]은 업무 효율성 증대 및 AI 역량 강화를 위해
-AI 도구 사용 내역을 **Gridge AiOPS** 플랫폼을 통해 기록합니다.
+AI 도구 사용 내역을 **Gridge AI Observer** 플랫폼을 통해 기록합니다.
 
 ## 수집 범위
 - 사용 채널, 모델, 토큰 수, 비용, 응답 시간
@@ -175,7 +175,7 @@ AI 도구 사용 내역을 **Gridge AiOPS** 플랫폼을 통해 기록합니다.
 ### 직원 동의 관리
 
 - 조직 MUST로 "2FA 강제" 처럼 "직원 동의 강제" 옵션
-- 동의 안 한 사용자는 AiOPS 대시보드 접근 차단 (또는 조회 전용)
+- 동의 안 한 사용자는 AI Observer 대시보드 접근 차단 (또는 조회 전용)
 - 감사 로그에 동의 시점 기록
 
 ---

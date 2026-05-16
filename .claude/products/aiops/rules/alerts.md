@@ -1,4 +1,4 @@
-# AiOPS / Alerts — 규칙 본문
+# AI Observer / Alerts — 규칙 본문
 
 > PA-009 본문. 이상 감지 룰, 알림 우선순위, Slack/Email 전송, 사용자 액션.
 

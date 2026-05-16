@@ -174,11 +174,11 @@ export default async function CreditbackPage() {
         <div className="card p-6 bg-gradient-to-br from-brand-50 to-purple-50">
           <h3 className="text-base font-semibold text-gray-900">다음 단계 — AI 개발 체계 구축</h3>
           <p className="text-sm text-gray-700 mt-2">
-            크레딧백 종료 전에 Wiring AI / AiOPS를 도입하면 추가 혜택이 있습니다:
+            크레딧백 종료 전에 Wiring AI / AI Observer를 도입하면 추가 혜택이 있습니다:
           </p>
           <ul className="mt-3 space-y-1 text-sm text-gray-700">
             <li>• <strong>Wiring AI 번들</strong>: 첫 3개월 추가 할인</li>
-            <li>• <strong>AiOPS</strong>: AI 사용 로그 + 성숙도 평가 무료 2개월</li>
+            <li>• <strong>AI Observer</strong>: AI 사용 로그 + 성숙도 평가 무료 2개월</li>
           </ul>
           <Link
             href="mailto:support@gridge.ai?subject=Wiring AI 번들 문의"

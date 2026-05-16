@@ -4,22 +4,24 @@ import { useState, useTransition } from 'react'
 import { formatKrw } from '@/lib/utils/format'
 import { createOrg } from './actions'
 
-type Step = 1 | 2 | 3 | 4
+type Step = 1 | 2 | 3 | 4 | 5
 
 interface State {
-  // Step 1
+  // Step 1 — 조직 기본
   name: string
   business_reg_no: string
-  // Step 2
-  tier: 'monthly' | 'weekly' | 'prepaid_monthly'
+  // Step 2 — 계약 조건
   credit_limit_krw: number
   deposit_krw: number
-  self_approval_headroom_krw: number  // Admin 자율 승인 월간 한도
-  creditback_start_at: string  // YYYY-MM-DD
   monthly_fee_krw: number
   contract_start_at: string
   contract_end_at: string
-  // Step 3
+  // Step 3 — v2 빌링 정책 (신설)
+  default_discount_rate: number          // 0.0 ~ 1.0 (예: 0.10 = 10% 할인)
+  billing_day_of_month: number           // 1 ~ 28
+  wallet_default_validity_months: number // 1 ~ 60
+  self_approval_headroom_krw: number     // 0 ~ 1_000_000_000
+  // Step 4 — 첫 Owner
   owner_email: string
   owner_name: string
 }
@@ -27,14 +29,9 @@ interface State {
 const STEP_LABELS: Record<Step, string> = {
   1: '조직 기본 정보',
   2: '계약 조건',
-  3: '첫 Owner 초대',
-  4: '최종 확인',
-}
-
-const TIER_LABEL: Record<State['tier'], { label: string; desc: string }> = {
-  monthly:         { label: '월간 (기본)',           desc: '월말 거래 합산 → 다음 달 초 청구 + 세금계산서' },
-  weekly:          { label: '주간 중간내역 + 월세계서', desc: '주간 내역서 발송 / 월 1회 세금계산서' },
-  prepaid_monthly: { label: '월 선불 예치금',          desc: '선불 예치금 차감 방식, 잔액 경고' },
+  3: 'v2 빌링 정책',
+  4: '첫 Owner 초대',
+  5: '최종 확인',
 }
 
 export function NewOrgWizard() {
@@ -46,14 +43,15 @@ export function NewOrgWizard() {
   const [state, setState] = useState<State>({
     name: '',
     business_reg_no: '',
-    tier: 'monthly',
     credit_limit_krw: 5_000_000,
     deposit_krw: 0,
-    self_approval_headroom_krw: 0,
-    creditback_start_at: today,
     monthly_fee_krw: 0,
     contract_start_at: today,
     contract_end_at: oneYearLater.toISOString().slice(0, 10),
+    default_discount_rate: 0.10,
+    billing_day_of_month: 1,
+    wallet_default_validity_months: 12,
+    self_approval_headroom_krw: 5_000_000,
     owner_email: '',
     owner_name: '',
   })
@@ -62,14 +60,23 @@ export function NewOrgWizard() {
   const update = <K extends keyof State>(k: K, v: State[K]) =>
     setState(prev => ({ ...prev, [k]: v }))
 
-  // 사업자번호 형식 검증 (XXX-XX-XXXXX)
   const isValidBrn = /^\d{3}-\d{2}-\d{5}$/.test(state.business_reg_no.trim())
   const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(state.owner_email.trim())
 
   const canAdvance = (): boolean => {
     if (step === 1) return state.name.trim().length >= 2 && isValidBrn
     if (step === 2) return state.credit_limit_krw > 0 && state.contract_start_at.length === 10
-    if (step === 3) return isValidEmail && state.owner_name.trim().length >= 1
+    if (step === 3)
+      return (
+        state.default_discount_rate >= 0 &&
+        state.default_discount_rate <= 1 &&
+        state.billing_day_of_month >= 1 &&
+        state.billing_day_of_month <= 28 &&
+        state.wallet_default_validity_months >= 1 &&
+        state.wallet_default_validity_months <= 60 &&
+        state.self_approval_headroom_krw >= 0
+      )
+    if (step === 4) return isValidEmail && state.owner_name.trim().length >= 1
     return true
   }
 
@@ -79,14 +86,14 @@ export function NewOrgWizard() {
     startTransition(() => { createOrg(fd) })
   }
 
-  const next = () => setStep(s => (s < 4 ? (s + 1) as Step : s))
+  const next = () => setStep(s => (s < 5 ? (s + 1) as Step : s))
   const prev = () => setStep(s => (s > 1 ? (s - 1) as Step : s))
 
   return (
     <div className="space-y-6">
       {/* Step indicator */}
       <div className="flex items-center">
-        {([1, 2, 3, 4] as Step[]).map(s => (
+        {([1, 2, 3, 4, 5] as Step[]).map(s => (
           <div key={s} className="flex items-center flex-1">
             <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
               s < step ? 'bg-brand-600 text-white'
@@ -95,15 +102,13 @@ export function NewOrgWizard() {
             }`}>
               {s < step ? '✓' : s}
             </div>
-            {s < 4 && <div className={`flex-1 h-px mx-2 ${s < step ? 'bg-brand-600' : 'bg-gray-200'}`} />}
+            {s < 5 && <div className={`flex-1 h-px mx-2 ${s < step ? 'bg-brand-600' : 'bg-gray-200'}`} />}
           </div>
         ))}
       </div>
-      <div className="text-center text-sm text-gray-500">
-        Step {step} / 4 — {STEP_LABELS[step]}
-      </div>
+      <p className="text-center text-sm text-gray-500">{STEP_LABELS[step]}</p>
 
-      <div className="card p-8">
+      <div className="card p-6 bg-white">
         {/* Step 1 */}
         {step === 1 && (
           <div className="space-y-5">
@@ -115,62 +120,36 @@ export function NewOrgWizard() {
                 type="text"
                 value={state.name}
                 onChange={e => update('name', e.target.value)}
-                placeholder="예: Acme Corp"
+                placeholder="㈜그릿지"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                required
                 maxLength={100}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                사업자등록번호 <span className="text-red-500">*</span>
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">사업자등록번호</label>
               <input
                 type="text"
                 value={state.business_reg_no}
                 onChange={e => update('business_reg_no', e.target.value)}
                 placeholder="123-45-67890"
-                pattern="\d{3}-\d{2}-\d{5}"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono"
-                required
               />
               {state.business_reg_no && !isValidBrn && (
-                <p className="mt-1 text-xs text-red-600">형식: XXX-XX-XXXXX (숫자만)</p>
+                <p className="mt-1 text-xs text-red-600">형식: XXX-XX-XXXXX</p>
               )}
-              <p className="mt-1 text-xs text-gray-500">
-                사업자등록번호는 등록 후 변경할 수 없습니다 (DB 트리거 강제).
-              </p>
             </div>
           </div>
         )}
 
-        {/* Step 2 */}
+        {/* Step 2 — 계약 조건 (v1 호환 + v2 단일 모델) */}
         {step === 2 && (
           <div className="space-y-5">
             <h2 className="text-lg font-semibold text-gray-900">계약 조건</h2>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">결제 티어</label>
-              <div className="space-y-2">
-                {(['monthly', 'weekly', 'prepaid_monthly'] as const).map(t => (
-                  <label key={t} className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer ${
-                    state.tier === t ? 'border-brand-600 bg-brand-50' : 'border-gray-200 hover:bg-gray-50'
-                  }`}>
-                    <input
-                      type="radio"
-                      name="tier"
-                      checked={state.tier === t}
-                      onChange={() => update('tier', t)}
-                      className="mt-1"
-                    />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{TIER_LABEL[t].label}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{TIER_LABEL[t].desc}</p>
-                    </div>
-                  </label>
-                ))}
-              </div>
+            <div className="p-3 bg-gray-50 border-l-[3px] border-l-gray-300 text-xs text-gray-600">
+              v2.0 결제 모델은 <span className="font-medium">충전 선금제 (prepaid_v2)</span> 단일.
+              세부 정책은 다음 step 에서 입력합니다.
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -184,13 +163,11 @@ export function NewOrgWizard() {
                   onChange={e => update('credit_limit_krw', Number(e.target.value))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono"
                 />
-                <p className="mt-1 text-xs text-gray-500">{formatKrw(state.credit_limit_krw)}</p>
+                <p className="mt-1 text-xs text-gray-500">{formatKrw(state.credit_limit_krw)} · 벤더 측 카드/계정 한도 상한</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  예치금 {state.tier === 'prepaid_monthly' && <span className="text-red-500">*</span>}
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">예치금 (선택)</label>
                 <input
                   type="number"
                   min={0}
@@ -199,26 +176,21 @@ export function NewOrgWizard() {
                   onChange={e => update('deposit_krw', Number(e.target.value))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono"
                 />
-                <p className="mt-1 text-xs text-gray-500">{formatKrw(state.deposit_krw)}</p>
+                <p className="mt-1 text-xs text-gray-500">{formatKrw(state.deposit_krw)} · 보증금성 예치 (선택 항목)</p>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                자율 승인 한도 (월간)
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">월 고정비 (선택)</label>
               <input
                 type="number"
                 min={0}
-                max={100_000_000}
-                step={500_000}
-                value={state.self_approval_headroom_krw}
-                onChange={e => update('self_approval_headroom_krw', Number(e.target.value))}
+                step={100_000}
+                value={state.monthly_fee_krw}
+                onChange={e => update('monthly_fee_krw', Number(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono"
               />
-              <p className="mt-1 text-xs text-gray-500">
-                {formatKrw(state.self_approval_headroom_krw)} · 현재 {state.self_approval_headroom_krw === 0 ? '비활성' : '활성'} — Admin이 AM 경유 없이 이 금액 내 요청을 즉시 승인 가능. 매월 1일 리셋.
-              </p>
+              <p className="mt-1 text-xs text-gray-500">{formatKrw(state.monthly_fee_krw)} · MSP 운영 고정비 (없으면 0)</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -241,30 +213,105 @@ export function NewOrgWizard() {
                 />
               </div>
             </div>
+          </div>
+        )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">크레딧백 시작일</label>
-              <input
-                type="date"
-                value={state.creditback_start_at}
-                onChange={e => update('creditback_start_at', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-              />
-              <p className="mt-1 text-xs text-gray-500">
-                PB-004 크레딧백 프로그램 — 6개월간 월 청구액의 10% 공제.
-                M6는 자동으로 is_final 플래그 적용.
-              </p>
+        {/* Step 3 — v2 빌링 정책 (신설) */}
+        {step === 3 && (
+          <div className="space-y-5">
+            <h2 className="text-lg font-semibold text-gray-900">v2 빌링 정책</h2>
+            <p className="text-sm text-gray-500">
+              충전 선금·할인·결제일·잔액 만료·자율승인 한도. 운영 중 변경 가능합니다.
+            </p>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  기본 할인율
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min={0}
+                  max={1}
+                  value={state.default_discount_rate}
+                  onChange={e => update('default_discount_rate', Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  0.10 = 10% · 가입 후 6개월 한정 적용 (첫 active 계정 생성 시 자동 시작)
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  결제일 (1~28)
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={28}
+                  value={state.billing_day_of_month}
+                  onChange={e => update('billing_day_of_month', Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  매월 헤드룸 리셋·세금계산서 발행 기준일
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  잔액 유효기간 (개월)
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={60}
+                  value={state.wallet_default_validity_months}
+                  onChange={e => update('wallet_default_validity_months', Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  충전 잔액 미사용 시 자동 만료까지의 개월 수 (기본 12)
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Org headroom (KRW)
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  step={500_000}
+                  value={state.self_approval_headroom_krw}
+                  onChange={e => update('self_approval_headroom_krw', Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  {formatKrw(state.self_approval_headroom_krw)} · 자율승인 가능 월 한도 (팀별 분배의 상한)
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-900 space-y-1">
+              <div className="font-medium">v2 정책 요약</div>
+              <div>· 첫 계정 active 시 6개월 할인 정책 자동 시작 (M-1002 트리거)</div>
+              <div>· 결제일에 self_approval_used + team_headroom_used 자동 리셋</div>
+              <div>· 잔액은 충전 환율로 고정 (환차는 그릿지 흡수)</div>
+              <div>· 팀 헤드룸 합계 ≤ Org headroom (BEFORE 트리거 검증)</div>
             </div>
           </div>
         )}
 
-        {/* Step 3 */}
-        {step === 3 && (
+        {/* Step 4 — Owner 초대 */}
+        {step === 4 && (
           <div className="space-y-5">
             <h2 className="text-lg font-semibold text-gray-900">첫 Owner 초대</h2>
             <p className="text-sm text-gray-500">
-              Owner는 조직당 1명만 존재할 수 있으며, 이후 포털에서 양도 가능합니다.
-              입력한 이메일로 Supabase Auth 초대 링크가 발송됩니다.
+              Owner는 조직당 1명만 존재. 이후 포털에서 양도 가능합니다.
+              입력한 이메일로 Supabase Auth 초대 링크 발송.
             </p>
 
             <div>
@@ -307,8 +354,8 @@ export function NewOrgWizard() {
           </div>
         )}
 
-        {/* Step 4 */}
-        {step === 4 && (
+        {/* Step 5 — 최종 확인 */}
+        {step === 5 && (
           <div className="space-y-5">
             <h2 className="text-lg font-semibold text-gray-900">최종 확인</h2>
 
@@ -324,18 +371,32 @@ export function NewOrgWizard() {
               <div className="card p-4 bg-gray-50">
                 <p className="text-xs text-gray-500 uppercase mb-2">계약 조건</p>
                 <dl className="space-y-1 text-sm">
-                  <div className="flex justify-between"><dt className="text-gray-500">티어</dt><dd>{TIER_LABEL[state.tier].label}</dd></div>
+                  <div className="flex justify-between"><dt className="text-gray-500">결제 모델</dt><dd>충전 선금제 (prepaid_v2)</dd></div>
                   <div className="flex justify-between"><dt className="text-gray-500">신용 한도</dt><dd className="font-mono">{formatKrw(state.credit_limit_krw)}</dd></div>
                   <div className="flex justify-between"><dt className="text-gray-500">예치금</dt><dd className="font-mono">{formatKrw(state.deposit_krw)}</dd></div>
+                  <div className="flex justify-between"><dt className="text-gray-500">월 고정비</dt><dd className="font-mono">{formatKrw(state.monthly_fee_krw)}</dd></div>
                   <div className="flex justify-between"><dt className="text-gray-500">계약 기간</dt><dd>{state.contract_start_at} ~ {state.contract_end_at}</dd></div>
-                  <div className="flex justify-between"><dt className="text-gray-500">크레딧백 시작</dt><dd>{state.creditback_start_at} (6개월)</dd></div>
+                </dl>
+              </div>
+
+              <div className="card p-4 bg-gray-50">
+                <p className="text-xs text-gray-500 uppercase mb-2">v2 빌링 정책</p>
+                <dl className="space-y-1 text-sm">
                   <div className="flex justify-between">
-                    <dt className="text-gray-500">자율 승인 한도 (월간)</dt>
-                    <dd className="font-mono">
-                      {state.self_approval_headroom_krw === 0
-                        ? <span className="text-gray-400">비활성</span>
-                        : formatKrw(state.self_approval_headroom_krw)}
-                    </dd>
+                    <dt className="text-gray-500">기본 할인율</dt>
+                    <dd className="font-mono">{(state.default_discount_rate * 100).toFixed(0)}% (6개월 한정)</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-gray-500">결제일</dt>
+                    <dd className="font-mono">매월 {state.billing_day_of_month}일</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-gray-500">잔액 유효기간</dt>
+                    <dd className="font-mono">{state.wallet_default_validity_months}개월</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-gray-500">Org headroom</dt>
+                    <dd className="font-mono">{formatKrw(state.self_approval_headroom_krw)}</dd>
                   </div>
                 </dl>
               </div>
@@ -352,11 +413,11 @@ export function NewOrgWizard() {
             <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
               <p className="text-sm font-medium text-orange-900">다음 작업이 수행됩니다</p>
               <ol className="mt-2 text-sm text-orange-800 list-decimal list-inside space-y-0.5">
-                <li>orgs 테이블에 신규 레코드 생성 (business_reg_no immutable)</li>
-                <li>org_contracts 레코드 생성 (크레딧백 6개월 기간 자동 계산)</li>
+                <li>orgs 테이블에 신규 레코드 생성 (plan='prepaid_v2', v2 정책 컬럼 4개 포함)</li>
+                <li>org_contracts 레코드 생성 (계약 조건만, creditback 컬럼은 v2에서 폐기됨)</li>
+                <li>미할당 팀 자동 생성 (M-1005 트리거)</li>
                 <li>Owner 멤버 초대 (status=invited)</li>
-                <li>감사 로그 3건 기록 (actor=super, visibility=both)</li>
-                <li>Phase 0: 초대 이메일은 Luna가 수동 발송</li>
+                <li>감사 로그 2건 기록 (actor=super)</li>
               </ol>
             </div>
           </div>
@@ -371,7 +432,7 @@ export function NewOrgWizard() {
           >
             ← 이전
           </button>
-          {step < 4 ? (
+          {step < 5 ? (
             <button
               onClick={next}
               disabled={!canAdvance() || pending}

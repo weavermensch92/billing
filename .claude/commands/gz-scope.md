@@ -27,7 +27,7 @@
 ```
 /gz-scope product
  → "현재 작업 대상 제품은?"
-    [1] AiOPS  [2] LucaPus  [3] Wiring  [4] 제품 간 연동
+    [1] AI Observer  [2] LucaPus  [3] Wiring  [4] 제품 간 연동
 
 /gz-scope mode
  → "인프라 모드는?"

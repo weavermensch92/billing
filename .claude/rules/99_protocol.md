@@ -174,7 +174,7 @@ GitHub Issue 전송이 **성공한 파일만** 삭제. 실패 시 파일 유지.
 
 [3/3] 발생 상황
 어떤 작업 중 이 규칙이 필요했는지 설명해 주세요.
-→ AiOPS 프록시 서버 구현 중 OpenAI 503 에러 시 동작 미정의로
+→ AI Observer 프록시 서버 구현 중 OpenAI 503 에러 시 동작 미정의로
   재시도 로직을 즉흥 구현했음. 다음 세션에서 재사용 불가.
 
 📝 Feedback 기록: feedback-2026-04-18_14-50_coding-retry-policy.md

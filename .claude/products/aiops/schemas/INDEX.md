@@ -1,6 +1,6 @@
-# AiOPS / Schemas — INDEX
+# AI Observer / Schemas — INDEX
 
-> AiOPS 백엔드(Supabase) 테이블 카탈로그.
+> AI Observer 백엔드(Supabase) 테이블 카탈로그.
 > F/S 체인의 탐색 단계(§ 2.2)가 참조.
 
 ---

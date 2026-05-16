@@ -71,16 +71,112 @@ export interface SetSpendLimitResult {
   applied_amount_usd?: number
 }
 
+// ─── v2 신규: 동적 토큰·워크스페이스 단위 API ──────────
+// v1 메서드는 env 기반 단일 워크스페이스. v2는 다중 Org 운영을 위해
+// 매 호출마다 adminToken + vendorWorkspaceId 동적 주입.
+
+export interface ListWorkspaceMembersInput {
+  vendorWorkspaceId: string
+  adminToken: string
+}
+
+export interface ListWorkspaceMembersResult {
+  ok: boolean
+  members: Array<{
+    vendorUserId: string
+    email: string | null
+    role: string
+    addedAt?: string | null
+  }>
+  error?: string
+}
+
+export interface CreateApiKeyInput {
+  vendorWorkspaceId: string
+  adminToken: string
+  /** 그릿지 account.id — 키 식별 메타 (벤더 측 메타에 저장 가능) */
+  accountId: string
+  label?: string | null
+}
+
+export interface CreateApiKeyResult {
+  ok: boolean
+  /** 벤더 측 키 식별자 (회수·재발급 시 참조) */
+  providerKeyId: string
+  /** 1회만 노출되는 평문 키 값. 호출자가 즉시 노출 후 폐기 (DB에 hash로 저장 권장) */
+  keyValueOnce: string
+  error?: string
+}
+
+export interface GetInvoicesInput {
+  vendorWorkspaceId: string
+  adminToken: string
+  periodStart: string // YYYY-MM-DD
+  periodEnd: string   // YYYY-MM-DD
+}
+
+/** vendor-invoice/fetcher.ts 의 RawVendorInvoice 와 호환 */
+export interface RawVendorInvoiceFromAdapter {
+  vendor_invoice_id: string
+  vendor_workspace_id: string
+  org_id: string
+  vendor: string
+  billing_period_start: string
+  billing_period_end: string
+  total_usd: number
+  raw_payload: Record<string, unknown>
+  items: Array<{
+    line_no: number
+    item_type: 'api_usage' | 'seat_license' | 'addon' | 'support' | 'credit' | 'other'
+    description: string
+    quantity?: number | null
+    unit?: string | null
+    amount_usd: number
+    meta?: Record<string, unknown>
+  }>
+}
+
+export interface GetInvoicesResult {
+  ok: boolean
+  invoices: RawVendorInvoiceFromAdapter[]
+  error?: string
+}
+
+export interface WorkspacePolicyInput {
+  restrictKeyIssuanceToAdmin: boolean
+  restrictBillingToOwner: boolean
+  forceVendorSso?: boolean
+  requireMfaForAdmin?: boolean
+}
+
+export interface SetWorkspacePolicyInput {
+  vendorWorkspaceId: string
+  adminToken: string
+  policy: WorkspacePolicyInput
+}
+
+export interface SetWorkspacePolicyResult {
+  ok: boolean
+  appliedFields: string[]
+  unsupportedFields: string[]
+  error?: string
+}
+
 // ─── 벤더 어댑터 인터페이스 ────────────────────────────
 export interface VendorAdapter {
   vendor: VendorName
   /** 벤더 측 Admin API 사용 가능 여부. env 미설정 시 false */
   isConfigured(): boolean
 
+  // v1 메서드 (env 기반 단일 워크스페이스)
   inviteMember(input: InviteMemberInput): Promise<VendorCallResult<InviteMemberResult>>
   removeMember(input: RemoveMemberInput): Promise<VendorCallResult<RemoveMemberResult>>
   listMembers(): Promise<VendorCallResult<ListMembersResult>>
-
-  /** 벤더가 per-user spend limit 을 지원하지 않으면 { ok: false, error: 'unsupported' } */
   setSpendLimit(input: SetSpendLimitInput): Promise<VendorCallResult<SetSpendLimitResult>>
+
+  // v2 신규 메서드 (동적 토큰·워크스페이스, 옵셔널)
+  listWorkspaceMembers?(input: ListWorkspaceMembersInput): Promise<ListWorkspaceMembersResult>
+  createApiKey?(input: CreateApiKeyInput): Promise<CreateApiKeyResult>
+  getInvoices?(input: GetInvoicesInput): Promise<GetInvoicesResult>
+  setWorkspacePolicy?(input: SetWorkspacePolicyInput): Promise<SetWorkspacePolicyResult>
 }

@@ -1,6 +1,6 @@
 # Integrations / Billing ↔ Wiring — CSM 업셀 파이프라인
 
-> **I-005** — Billing CSM 이 감지한 고객 상태 → Wiring AI 도입 제안 자동화. 크레딧백 6개월 종료 → Wiring 라이선스 전환 플로우.
+> **I-005** — Billing 운영 중 자동 감지된 업셀 시그널 → CSM이 Wiring 도입 제안. 크레딧백 6개월 종료 → Wiring 라이선스 전환 플로우.
 
 ---
 
@@ -153,7 +153,7 @@ ALTER TABLE billing.org_contracts ADD COLUMN linked_wiring_contract_id UUID;
 
 `/console/csm/health-index` 에 추가:
 - **Billing → Wiring 전환율** (목표 10%)
-- **AiOPS → Wiring 전환율** (기존 시그널 포함, 목표 20%)
+- **AI Observer → Wiring 전환율** (기존 시그널 포함, 목표 20%)
 - **시그널 감지 → 대화 시작 비율** (목표 30%+)
 - **대화 시작 → 계약 체결 비율** (목표 20%)
 
@@ -186,5 +186,5 @@ Phase 2 영업 데이터로 누적.
 - Wiring 제품: `products/wiring/CLAUDE.md`
 - Billing CSM: `products/billing/schemas/tables/*` (csm_notes, monthly_reviews, upsell_signals — v0.19 INDEX 등재)
 - 크레딧백 종료 절차: `products/billing/rules/creditback.md § PB-004-06`
-- AiOPS → Wiring 기존: `integrations/aiops-wiring.md` (I-001)
+- AI Observer → Wiring 기존: `integrations/aiops-wiring.md` (I-001)
 - 외부 노출 규칙: `01_product.md § 4` (G-004)

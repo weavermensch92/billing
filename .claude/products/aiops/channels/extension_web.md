@@ -1,4 +1,4 @@
-# AiOPS / Channels / Extension (Web) — 규칙 본문
+# AI Observer / Channels / Extension (Web) — 규칙 본문
 
 > PA-005-07 본문. 브라우저 익스텐션 기반 웹 채널 수집.
 > 대상: claude.ai / chatgpt.com / gemini.google.com. Manifest V3.
@@ -22,7 +22,7 @@ DOM 구조는 벤더 업데이트에 취약 → 회귀 테스트 + 셀렉터 cat
 ```json
 {
   "manifest_version": 3,
-  "name": "Gridge AiOPS Extension",
+  "name": "Gridge AI Observer Extension",
   "version": "1.0.0",
   "permissions": ["storage", "activeTab"],
   "host_permissions": [
@@ -153,7 +153,7 @@ setInterval(async () => {
 
 ```html
 <div>
-  <h3>Gridge AiOPS</h3>
+  <h3>Gridge AI Observer</h3>
   <label>Organization Token:
     <input id="orgToken" type="password" />
   </label>

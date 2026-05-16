@@ -98,9 +98,9 @@
 |---|---|---|---|
 | `csm_notes` | CSM 메모 | P2 | `tables/csm_notes.md` |
 | `monthly_reviews` | 월간 리뷰 세션 | P2 | `tables/monthly_reviews.md` |
-| `upsell_signals` | 업셀 시그널 (Billing→AiOPS/Wiring) | P2 | `tables/upsell_signals.md` |
+| `upsell_signals` | 업셀 시그널 (Billing→AI Observer/Wiring) | P2 | `tables/upsell_signals.md` |
 
-**합계**: 18개 신규 (AiOPS/Wiring 와 공용 없음), P1 별표 = 10개 (Phase 0 Day-1 필수).
+**합계**: 18개 신규 (AI Observer/Wiring 와 공용 없음), P1 별표 = 10개 (Phase 0 Day-1 필수).
 
 ---
 

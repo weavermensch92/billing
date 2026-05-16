@@ -1,4 +1,4 @@
-# AiOPS / Channels / Gemini — 규칙 본문
+# AI Observer / Channels / Gemini — 규칙 본문
 
 > PA-005-03 본문. Google Gemini API 프록시.
 

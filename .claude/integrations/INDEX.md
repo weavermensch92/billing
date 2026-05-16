@@ -9,7 +9,7 @@
 
 | 네임스페이스 | 범위 | 파일 수 |
 |---|---|---|
-| `I-xxx` | Gridge 제품 간 (AiOPS / Wiring / LucaPus) | 3 |
+| `I-xxx` | Gridge 제품 간 (AI Observer / Wiring / LucaPus) | 3 |
 | `L-xxx` | LucaPus 와 외부 도구 (Jira / Slack / GitHub 등) | 15 |
 | `H-xxx` | 하네스 AI 내부 API | 5 |
 
@@ -19,10 +19,10 @@
 
 | 규칙 | 제목 | 방향 | 파일 |
 |---|---|---|---|
-| 🔗 I-001 참조 | AiOPS → Wiring 로그 파이프라인 | AiOPS → Wiring | `aiops-wiring.md` |
+| 🔗 I-001 참조 | AI Observer → Wiring 로그 파이프라인 | AI Observer → Wiring | `aiops-wiring.md` |
 | 🔗 I-002 참조 | Wiring ↔ LucaPus 적합화 데이터 동기화 | 양방향 | `wiring-lucapus.md` |
-| 🔗 I-003 참조 | LucaPus → AiOPS 에이전트 호출 로깅 | LucaPus → AiOPS | `lucapus-aiops.md` |
-| 🔗 I-004 참조 | Billing ↔ AiOPS 실결제·사용량 교차 검증 | 양방향 | `billing-aiops.md` |
+| 🔗 I-003 참조 | LucaPus → AI Observer 에이전트 호출 로깅 | LucaPus → AI Observer | `lucapus-aiops.md` |
+| 🔗 I-004 참조 | Billing ↔ AI Observer 실결제·사용량 교차 검증 | 양방향 | `billing-aiops.md` |
 | 🔗 I-005 참조 | Billing → Wiring CSM 업셀 시그널 | Billing → Wiring | `billing-wiring.md` |
 
 > ID 공식 등록: `rules/00_index.md § 6`
@@ -30,7 +30,7 @@
 ### 핵심 원칙 (공통)
 
 1. **동일 org_id 매칭**: 제품 간 조직 경계 공유
-2. **Mode 일치**: Wiring Mode A 면 AiOPS 도 Mode A
+2. **Mode 일치**: Wiring Mode A 면 AI Observer 도 Mode A
 3. **Mode B 데이터 격리**: Gridge 서버 경유 절대 금지 (G-087)
 4. **외부 노출 금지**: 내부 용어 / API 구조 고객 UI 에 노출 X (G-004)
 
@@ -113,7 +113,7 @@
 
 - Wiring 설정 > 연동 UI: `products/wiring/screens/settings.md` (작성 예정)
 - Wiring SSO 상세: `products/wiring/rules/sso.md` (PW-014)
-- AiOPS 채널 카탈로그: `products/aiops/rules/channels.md` (PA-005)
+- AI Observer 채널 카탈로그: `products/aiops/rules/channels.md` (PA-005)
 - LucaPus 하네스: `products/lucapus/orchestrators/harness.md` (PL-004)
 - 공통 보안: `08_security.md` (G-140~160)
 - Mode 원칙: `05_infra_mode.md` (G-080~092)

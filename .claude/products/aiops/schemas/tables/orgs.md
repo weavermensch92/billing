@@ -1,6 +1,6 @@
-# AiOPS / Schemas / orgs — 테이블 본문
+# AI Observer / Schemas / orgs — 테이블 본문
 
-> AiOPS 고객 조직. plan / prompt_storage / infra_mode 3개 옵션.
+> AI Observer 고객 조직. plan / prompt_storage / infra_mode 3개 옵션.
 
 ---
 
@@ -62,7 +62,7 @@ CREATE INDEX idx_orgs_infra_mode ON orgs(infra_mode);
 - `disabled`: 프롬프트 저장 안 함 (민감 업종)
 
 ### `billing_org_id` (I-004 연계)
-Billing MSP (Mode D) 와 동일 고객 매칭. NULL 이면 AiOPS 단독 고객.
+Billing MSP (Mode D) 와 동일 고객 매칭. NULL 이면 AI Observer 단독 고객.
 
 ## RLS
 

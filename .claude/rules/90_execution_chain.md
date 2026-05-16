@@ -172,7 +172,7 @@
 1. schemas/{project}/INDEX.md 로 대상 테이블 특정
 2. schemas/{project}/tables/{table}.md DDL 확인
 3. rules/02_architecture.md
-4. PL-xxx (LucaPus) 또는 PA-xxx (AiOPS) DB 규칙
+4. PL-xxx (LucaPus) 또는 PA-xxx (AI Observer) DB 규칙
 5. G-141 (감사 로그), G-144 (고객 격리)
 ```
 
@@ -322,7 +322,7 @@
 ## I. Integration (제품 간 연동)
 
 ### 트리거
-"연동", "~에 연결", "AiOPS↔Wiring", "LucaPus ↔ Wiring", "웹훅"
+"연동", "~에 연결", "AI Observer↔Wiring", "LucaPus ↔ Wiring", "웹훅"
 
 ### 사전 로드
 ```
@@ -369,7 +369,7 @@
 | "기능 구현하고 기존 코드도 정리" | F | R (후행) |
 | "버그 수정 + 재발 방지 검증" | D | V (후행) |
 | "스키마 변경 후 관련 기능 수정" | S | F (후행) |
-| "AiOPS → Wiring 연동 신규 기능" | I | F (후행) |
+| "AI Observer → Wiring 연동 신규 기능" | I | F (후행) |
 
 **주 체인 완료 → 부 체인 진입 전 사용자 확인 필수.**
 

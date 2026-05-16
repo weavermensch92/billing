@@ -1,14 +1,14 @@
 # `/gz-impact <변경대상>` — 제품 간 임팩트 분석
 
 ## 목적
-Gridge AIMSP의 제품 간 연동(AiOPS / LucaPus / Wiring)을 고려한 변경 영향 분석. 그릿지 전용 명령어.
+Gridge AIMSP의 제품 간 연동(AI Observer / LucaPus / Wiring)을 고려한 변경 영향 분석. 그릿지 전용 명령어.
 
 ## 트리거
 - **수동**: `/gz-impact <변경 설명>` 입력
 - **자동**: S 체인 / M 체인 진입 시 다른 제품 연동점이 있다고 판단되면 권고
 
 ## 입력
-변경 대상 자연어 설명. 예: "AiOPS 로그 스키마에 tenant_id 추가"
+변경 대상 자연어 설명. 예: "AI Observer 로그 스키마에 tenant_id 추가"
 
 ## 실행
 ```
@@ -37,13 +37,13 @@ Gridge AIMSP의 제품 간 연동(AiOPS / LucaPus / Wiring)을 고려한 변경 
 
 ## 예시
 ```
-/gz-impact "AiOPS 로그 스키마에 tenant_id 추가"
+/gz-impact "AI Observer 로그 스키마에 tenant_id 추가"
 
 → 영향 분석:
-  [원천] AiOPS PA-001
+  [원천] AI Observer PA-001
   [연쇄]
-    - I-001 AiOPS → Wiring 로그 파이프라인: Wiring 보고서 탭 영향
-    - I-003 LucaPus → AiOPS 에이전트 호출 로깅: LucaPus 호출 페이로드 수정 필요
+    - I-001 AI Observer → Wiring 로그 파이프라인: Wiring 보고서 탭 영향
+    - I-003 LucaPus → AI Observer 에이전트 호출 로깅: LucaPus 호출 페이로드 수정 필요
   [Mode 영향]
     - Mode B 온프레: 고객 DB 마이그레이션 필요 → 조직 승인 선행
   [위계 영향]
@@ -52,7 +52,7 @@ Gridge AIMSP의 제품 간 연동(AiOPS / LucaPus / Wiring)을 고려한 변경 
   권장 순서:
   1. Wiring 보고서 탭 하위 호환성 확인
   2. LucaPus 호출부 업데이트
-  3. AiOPS 스키마 마이그레이션
+  3. AI Observer 스키마 마이그레이션
   4. Mode B 고객 별도 공지
 ```
 

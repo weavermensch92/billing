@@ -42,7 +42,7 @@ rules/06_hitl.md (이미 로드)
 | 파이프라인 | F-005 | `rules/pipeline_view.md` | PW-002~005 |
 | 실시간 로그 | F-006 | `screens/logs.md` | 세션 배지 모드별 |
 | 산출물 | F-007 | `screens/artifacts.md` | — |
-| 보고서 | F-008 | `screens/reports.md` | AiOPS 연동 탭 |
+| 보고서 | F-008 | `screens/reports.md` | AI Observer 연동 탭 |
 | 운영 (Stage 3) | F-009 | `screens/ops.md` | Stage 3 전용 |
 | 설정 | F-010 | `screens/settings.md` | 10개 하위 메뉴 |
 | Org Admin | F-011 | `screens/org_admin.md` | PW-013 |

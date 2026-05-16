@@ -98,10 +98,10 @@ VALUES
    '{"threshold_pct": 90}',
    '["notify_customer_admin"]'),
 
-  -- 카테고리 3: 교차 검증 (I-004 AiOPS ↔ Billing)
+  -- 카테고리 3: 교차 검증 (I-004 AI Observer ↔ Billing)
   ('aiops_billing_gap', 'cross_check', 'critical',
-   'AiOPS ↔ Billing 오차 > 1%',
-   'AiOPS usage_snapshots의 예상 비용과 Billing transactions의 실제 결제액 오차가 1% 초과',
+   'AI Observer ↔ Billing 오차 > 1%',
+   'AI Observer usage_snapshots의 예상 비용과 Billing transactions의 실제 결제액 오차가 1% 초과',
    '{"threshold_pct": 1}',
    '["notify_finance", "create_investigation_task"]'),
 

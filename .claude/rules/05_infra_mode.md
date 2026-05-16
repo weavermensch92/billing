@@ -321,10 +321,10 @@ AI 실행 레일 (Mode A/B/C, 3제품 공통)
 
 | 시나리오 | 예시 |
 |---|---|
-| Mode A + Mode D | AiOPS 구독 + Billing MSP 계약 (AI 실행은 Gridge 매니지드, 실결제도 Gridge 리셀러) |
-| Mode B + Mode D | 온프레 AiOPS + Billing MSP (내부 LLM 사용하면서도 ChatGPT Team / Claude Team 구독은 Billing 에 위임) |
+| Mode A + Mode D | AI Observer 구독 + Billing MSP 계약 (AI 실행은 Gridge 매니지드, 실결제도 Gridge 리셀러) |
+| Mode B + Mode D | 온프레 AI Observer + Billing MSP (내부 LLM 사용하면서도 ChatGPT Team / Claude Team 구독은 Billing 에 위임) |
 | Mode C + Mode D | 고객 API 키 사용 + Billing MSP (매입은 고객 키, 실제 구독 서비스만 Billing) |
-| Mode D 단독 | Billing MSP 만 계약 (AiOPS / Wiring / LucaPus 없이 결제 관리만) |
+| Mode D 단독 | Billing MSP 만 계약 (AI Observer / Wiring / LucaPus 없이 결제 관리만) |
 
 ### G-091-02 — Mode D 가 다루는 범위 (≠ AI 실행)
 
@@ -357,13 +357,13 @@ Mode A/B/C 의 비용 표시 (G-082) 와 **별도 레일**:
 
 | 화면 | Mode A/B/C 표시 | Mode D 추가 표시 |
 |---|---|---|
-| AiOPS 대시보드 | API 사용량 기반 비용 (추정) | **실결제 금액** (transactions 원장 연계) |
+| AI Observer 대시보드 | API 사용량 기반 비용 (추정) | **실결제 금액** (transactions 원장 연계) |
 | 고객 포털 `/app/billing` | — (미노출) | 월 청구서 · 크레딧백 · 세금계산서 |
 | 운영 콘솔 | — (미노출) | Finance 손익 + Anthropic 패스스루 분리 |
 
 **금지**:
 - Mode D 미계약 고객에게 `/app/billing` / `transactions` 노출 금지
-- Mode D 의 `gridge_margin_krw` 를 AiOPS / Wiring UI 에 노출 금지 (내부·외부 정보 분리, PB-005-05)
+- Mode D 의 `gridge_margin_krw` 를 AI Observer / Wiring UI 에 노출 금지 (내부·외부 정보 분리, PB-005-05)
 
 ### G-091-05 — Mode D 와 Mode A 의 경계
 
@@ -376,7 +376,7 @@ Mode A/B/C 의 비용 표시 (G-082) 와 **별도 레일**:
 
 ### G-091-06 — 감사 로그 분리
 
-- Mode A/B/C 감사: Wiring · AiOPS · LucaPus 각자 `audit_logs`
+- Mode A/B/C 감사: Wiring · AI Observer · LucaPus 각자 `audit_logs`
 - Mode D 감사: `products/billing/schemas/` 의 `audit_logs` (별도 테이블)
 
 동일 이름 `audit_logs` 라도 **물리적 별도 테이블** (namespace 분리).
@@ -386,7 +386,7 @@ Mode A/B/C 의 비용 표시 (G-082) 와 **별도 레일**:
 - [ ] Mode D 계약 없이 `/app/billing` 접근 가능?
 - [ ] 고객 자금이 그릿지 계좌를 경유하는 결제 경로 존재?
 - [ ] Mode A 의 AI 실행 비용과 Mode D 의 리셀러 매출 혼동?
-- [ ] Mode D 감사 로그가 Wiring / AiOPS 포털에 노출?
+- [ ] Mode D 감사 로그가 Wiring / AI Observer 포털에 노출?
 - [ ] `gridge_margin_krw` 필드가 고객 포털 API 응답에 포함?
 
 ### 12.2 Mode D 참조

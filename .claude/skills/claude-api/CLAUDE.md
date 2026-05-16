@@ -1,7 +1,7 @@
 # Skills — Claude API (Anthropic)
 
 > Anthropic Claude API + SDK + MCP 사용 가이드.
-> 하네스 AI / LucaPus 에이전트 / AiOPS 프록시 모두 참조.
+> 하네스 AI / LucaPus 에이전트 / AI Observer 프록시 모두 참조.
 
 ---
 
@@ -173,11 +173,11 @@ server.setRequestHandler('tools/list', async () => ({
 await server.connect(new StdioServerTransport());
 ```
 
-Gridge 내부에서 Wiring / LucaPus / AiOPS 를 서로 연결할 때 MCP 서버 패턴 활용 가능.
+Gridge 내부에서 Wiring / LucaPus / AI Observer 를 서로 연결할 때 MCP 서버 패턴 활용 가능.
 
 ---
 
-## 비용 추적 (AiOPS 연동)
+## 비용 추적 (AI Observer 연동)
 
 응답에서 `usage` 필수 확인:
 
@@ -188,7 +188,7 @@ const cost = calculateCost(
   response.usage.input_tokens,
   response.usage.output_tokens,
 );
-// AiOPS logs 테이블에 기록 (PA-001)
+// AI Observer logs 테이블에 기록 (PA-001)
 ```
 
 모델별 단가는 `skills/multi-llm-routing/CLAUDE.md` 참조.
@@ -223,7 +223,7 @@ try {
 ## 참조
 
 - Anthropic 공식 docs: https://docs.claude.com (최신 정보 확인)
-- AiOPS 프록시: `products/aiops/channels/anthropic.md`
+- AI Observer 프록시: `products/aiops/channels/anthropic.md`
 - 하네스 모델 배정: `products/lucapus/orchestrators/harness.md` (PL-004)
 - 멀티 LLM 라우팅: `skills/multi-llm-routing/CLAUDE.md`
 - G-088 Mode C API 키: `05_infra_mode.md § 8`

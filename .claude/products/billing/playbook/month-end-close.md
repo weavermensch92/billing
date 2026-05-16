@@ -12,7 +12,7 @@ M월 31일 23:59 ~ M+1일 02:00   settle 확정 대기 (카드사 매입)
 
 M+1일 00:30   invoice_generation 배치 시작 (pg_cron)
 M+1일 01:00   드래프트 청구서 생성 완료
-M+1일 02:00   교차 검증 배치 (AiOPS ↔ Billing, I-004)
+M+1일 02:00   교차 검증 배치 (AI Observer ↔ Billing, I-004)
 
 M+1일 09:00   Finance 출근 → 콘솔 /billing/drafts 확인
 M+1일 10:00   초안 검수 시작
@@ -132,7 +132,7 @@ SELECT (CURRENT_DATE - interval '1 month')::date, now() - interval '30 minutes',
 ## M+1일 02:00 — 교차 검증 (I-004)
 
 ```sql
--- AiOPS ↔ Billing 오차 체크
+-- AI Observer ↔ Billing 오차 체크
 SELECT
   o.name,
   b.customer_charge_total AS billing_total,

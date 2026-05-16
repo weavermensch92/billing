@@ -57,7 +57,7 @@
 | `integrations` | Jira/Slack/GitHub 연결 상태 | `tables/integrations.md` | P2 |
 | `jira_item_mapping` | 아이템 ↔ Jira 이슈 매핑 | `tables/jira_item_mapping.md` | P3 |
 
-### 비용/사용량 (G-082, AiOPS 연동)
+### 비용/사용량 (G-082, AI Observer 연동)
 
 | 테이블 | 용도 | 본문 | 상태 |
 |---|---|---|---|

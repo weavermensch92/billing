@@ -275,5 +275,5 @@ SSOT Verifier T3:
 
 - CI 기본: `spec_module_build.md § D-007`
 - 보안 (HTTPS/TLS): `spec_security.md § D-050`
-- AiOPS 온프레 배포: `products/aiops/rules/onprem.md` (PA-011)
+- AI Observer 온프레 배포: `products/aiops/rules/onprem.md` (PA-011)
 - 4-Tier Gate T4 (보안): `products/lucapus/rules/gate.md § PL-005-03`

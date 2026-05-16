@@ -1,6 +1,6 @@
-# AiOPS (AI 옵저버) — 제품 라우터
+# AI Observer (AI 옵저버) — 제품 라우터
 
-> AiOPS 작업 시 추가 로드되는 제품 라우터.
+> AI Observer 작업 시 추가 로드되는 제품 라우터.
 > 공통 규칙(rules/) + 이 라우터 + 필요 시 rules/ 하위 파일.
 > 200줄 이내 유지.
 
@@ -16,7 +16,7 @@
 
 ---
 
-## 1. AiOPS 작업 시 자동 로드 순서
+## 1. AI Observer 작업 시 자동 로드 순서
 
 ```
 ALWAYS_LOAD (이미 컨텍스트)
@@ -30,7 +30,7 @@ rules/01_product.md / 03_hierarchy.md / 05_infra_mode.md / 08_security.md
 
 ---
 
-## 2. AiOPS 핵심 기능 매핑
+## 2. AI Observer 핵심 기능 매핑
 
 | 기능 | PA-ID | 파일 |
 |---|---|---|
@@ -109,7 +109,7 @@ rules/01_product.md / 03_hierarchy.md / 05_infra_mode.md / 08_security.md
 
 ---
 
-## 5. AiOPS 전용 절대 규칙
+## 5. AI Observer 전용 절대 규칙
 
 이 제품 내부에서 위반 시 Conflict 자동 발동:
 
@@ -122,7 +122,7 @@ rules/01_product.md / 03_hierarchy.md / 05_infra_mode.md / 08_security.md
 
 ---
 
-## 6. AiOPS 상품 BM
+## 6. AI Observer 상품 BM
 
 | 플랜 | 대상 | 가격 (월) | 포함 |
 |---|---|---|---|
@@ -139,7 +139,7 @@ BM 상세: `01_product.md § 6` 와 정합.
 ## 7. 외부 노출 제한
 
 이 제품을 고객/파트너에게 소개할 때 **사용하지 않을 용어** (G-004):
-- "AI 옵저버" (내부 코드명, 외부 노출 OK이나 "AiOPS" 병기 권장)
+- "AI 옵저버" (내부 코드명, 외부 노출 OK이나 "AI Observer" 병기 권장)
 - "mitmproxy" (기술 디테일, IT팀 협조 문맥에서만)
 - "Playwright 크롤러" (기술 디테일, 고객에게 "주기적 수집"으로 표현)
 
@@ -152,7 +152,7 @@ BM 상세: `01_product.md § 6` 와 정합.
 
 ## 8. Sprint 1 (로그 수집 인프라) 범위
 
-AiOPS 개발의 **최우선 스프린트**. 3~4일 내 완료 목표:
+AI Observer 개발의 **최우선 스프린트**. 3~4일 내 완료 목표:
 
 1. 로그 DB 스키마 (logs/users/orgs) + Supabase 마이그레이션
 2. API 프록시 서버 (Anthropic/OpenAI/Gemini 호환, 비동기 로깅)

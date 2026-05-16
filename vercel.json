@@ -1,0 +1,32 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/member-sync",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/expire-wallets",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/finalize-termination",
+      "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/cron/auto-approve-pending",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/detect-expiring-cards",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/reset-headroom",
+      "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/invoice-polling",
+      "schedule": "0 5 5 * *"
+    }
+  ]
+}

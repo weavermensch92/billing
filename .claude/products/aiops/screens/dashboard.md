@@ -1,4 +1,4 @@
-# AiOPS / Screens / dashboard — `/app/dashboard`
+# AI Observer / Screens / dashboard — `/app/dashboard`
 
 > super_admin 전용 조직 AI 사용 현황 대시보드. 채널별 사용량 + 성숙도 + 이상 이벤트 + 비용.
 

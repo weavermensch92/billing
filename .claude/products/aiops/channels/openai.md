@@ -1,4 +1,4 @@
-# AiOPS / Channels / OpenAI — 규칙 본문
+# AI Observer / Channels / OpenAI — 규칙 본문
 
 > PA-005-02 본문. OpenAI API 프록시. 호환 API (Azure OpenAI 등) 도 커버.
 

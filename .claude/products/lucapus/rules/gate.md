@@ -270,7 +270,7 @@ p99 초과 시: 로그 + 최적화 제안 (증분 실행 / 캐시 활용).
 ## PL-005-07 — Gate 결과 저장 (MUST)
 
 ```sql
--- Wiring / AiOPS 공용 스키마
+-- Wiring / AI Observer 공용 스키마
 CREATE TABLE gate_results (
   id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   org_id       uuid NOT NULL REFERENCES orgs(id),

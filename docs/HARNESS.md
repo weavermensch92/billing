@@ -1,6 +1,6 @@
 # Gridge AIMSP Harness
 
-> Claude Code rulebook for the **Gridge AIMSP** — AiOPS + LucaPus + Wiring AI + **Billing MSP** 4제품 통합 플랫폼용 자동 실행 하네스.
+> Claude Code rulebook for the **Gridge AIMSP** — AI Observer + LucaPus + Wiring AI + **Billing MSP** 4제품 통합 플랫폼용 자동 실행 하네스.
 >
 > 개발자가 Claude Code에서 목적만 지시하면, 이 하네스가 **4축 확정 → 작업 유형 감지 → 체인 실행 → 자가 검증 → 기록**을 자동으로 흘려보낸다.
 
@@ -30,7 +30,7 @@ Claude Code:
 
 ## 누구를 위한 것인가
 
-- Gridge AIMSP 제품(AiOPS / LucaPus / Wiring AI)을 개발하는 내부 팀
+- Gridge AIMSP 제품(AI Observer / LucaPus / Wiring AI)을 개발하는 내부 팀
 - Claude Code 기반으로 **팀 전체가 일관된 규칙을 따라 개발**하고 싶은 환경
 - 외주 확장 시에도 코드 품질·보안·감사가 자동으로 지켜져야 하는 엔터프라이즈 프로젝트
 
@@ -153,7 +153,7 @@ your-project/
 
 | 축 | 값 |
 |---|---|
-| **제품** | AiOPS / LucaPus / Wiring / 연동 |
+| **제품** | AI Observer / LucaPus / Wiring / 연동 |
 | **모드** | A 매니지드 / B 온프레 / C 고객키 |
 | **위계** | actor (작업 수행자) + target (기능 대상자) 분리 |
 | **Stage** | 0 모니터링 / 1 보조 / 2 협업 / 3 주도 |

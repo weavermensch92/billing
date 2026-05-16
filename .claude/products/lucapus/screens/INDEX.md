@@ -22,7 +22,7 @@ screens/
 ## 제품 특성 (중요)
 
 LucaPus 는 **B2B SaaS** 로, 고객이 직접 설치하여 사용하는 AI 개발 플랫폼.  
-AiOPS / Wiring / Billing 처럼 Gridge 가 전담 운영하는 서비스와는 달리:
+AI Observer / Wiring / Billing 처럼 Gridge 가 전담 운영하는 서비스와는 달리:
 - **고객 관리 API 키** 가 기본 (Phase 0~1)
 - **고객 셀프서비스** 중심 (AM 개입 최소화)
 - **개발자 도구** 특성 (IDE 같은 워크플로)

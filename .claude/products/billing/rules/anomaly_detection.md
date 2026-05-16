@@ -10,7 +10,7 @@
 |---|---|---|
 | **A. 거절 이상** | 단시간 내 거절 급증 / 단일 계정 반복 거절 | Ops (긴급) |
 | **B. 결제 이상** | 평균 대비 급증 / 가맹점 매칭 실패 | Ops (분석) |
-| **C. 교차 검증 이상** | AiOPS ↔ Billing 오차 (I-004) | Super |
+| **C. 교차 검증 이상** | AI Observer ↔ Billing 오차 (I-004) | Super |
 | **D. 운영 이상** | VCN 만료 임박 누락 / 장기 미사용 계정 | AM / CSM |
 
 ## PB-012-02. anomaly_rules 스키마
@@ -107,7 +107,7 @@ INSERT INTO anomaly_rules (rule_code, category, display_name, trigger_condition,
   '["queue_for_super", "block_invoice_inclusion"]'::jsonb),
 
 -- C. 교차 검증 (I-004 연계)
-('aiops_billing_gap', 'cross_check', 'AiOPS ↔ Billing 월 오차 20% 초과',
+('aiops_billing_gap', 'cross_check', 'AI Observer ↔ Billing 월 오차 20% 초과',
   '{"variance_pct_threshold": 20, "source": "aiops_vs_billing"}'::jsonb,
   'high',
   '["notify_super"]'::jsonb),

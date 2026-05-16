@@ -1,6 +1,6 @@
-# AiOPS / Screens — INDEX
+# AI Observer / Screens — INDEX
 
-> AiOPS 는 **관측 + 거버넌스** 도구. Super Admin + Admin Teams + Member 3단 권한에 따른 다른 뷰.
+> AI Observer 는 **관측 + 거버넌스** 도구. Super Admin + Admin Teams + Member 3단 권한에 따른 다른 뷰.
 
 ---
 

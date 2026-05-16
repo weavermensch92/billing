@@ -57,5 +57,5 @@
 - Wiring 디자인 토큰: `products/wiring/rules/design.md` (PW-001)
 - React Flow 사용처: `products/wiring/rules/pipeline_view.md` (PW-002~005)
 - 하네스 모델 배정: `products/lucapus/orchestrators/harness.md` (PL-004)
-- AiOPS 익스텐션: `products/aiops/rules/extension.md` (PA-006)
+- AI Observer 익스텐션: `products/aiops/rules/extension.md` (PA-006)
 - 로컬 스킬: `.context/skills/README.md`

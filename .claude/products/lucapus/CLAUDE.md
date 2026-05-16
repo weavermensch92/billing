@@ -14,7 +14,7 @@
 - **기술 스택**: Node.js + TypeScript + Paperclip(오케스트레이션) + PostgreSQL + YAML 기반 규칙 파일
 - **핵심 가치**: "적합화가 쌓일수록 AI가 정확해진다"
 - **Wiring과의 관계**: Wiring이 LucaPus의 웹 가시화 레이어. LucaPus는 엔진, Wiring은 UI.
-- **AiOPS와의 관계**: 에이전트 호출이 AiOPS 프록시를 경유하여 자동 로깅 (I-003).
+- **AI Observer와의 관계**: 에이전트 호출이 AI Observer 프록시를 경유하여 자동 로깅 (I-003).
 
 ---
 
@@ -182,14 +182,14 @@ LucaPus 엔진이 외부 도구와 연결되는 방식:
 
 ---
 
-## 7. AiOPS와의 연동 (I-003)
+## 7. AI Observer와의 연동 (I-003)
 
-LucaPus의 **모든 AI 에이전트 호출이 AiOPS 프록시를 경유.**
+LucaPus의 **모든 AI 에이전트 호출이 AI Observer 프록시를 경유.**
 - 자동 로깅 (프롬프트 / 응답 / 토큰 / 비용)
 - org_id / project_id / agent_id 메타 태깅
 - 감사 로그 동기화
 
-**설정:** LucaPus 엔진의 `BASE_URL` 을 AiOPS 프록시 엔드포인트로 지정.
+**설정:** LucaPus 엔진의 `BASE_URL` 을 AI Observer 프록시 엔드포인트로 지정.
 
 ---
 

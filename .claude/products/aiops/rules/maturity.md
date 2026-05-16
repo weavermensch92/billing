@@ -1,4 +1,4 @@
-# AiOPS / Maturity — 규칙 본문
+# AI Observer / Maturity — 규칙 본문
 
 > PA-010 본문. AI 성숙도 5단계 분류 + Next Step 추천 로직.
 > MSP 업셀 데이터 소스.
@@ -229,7 +229,7 @@ CREATE INDEX idx_maturity_org_time ON maturity_scores(org_id, computed_at DESC);
 월간 PDF/HTML 보고서:
 
 ```
-Gridge AiOPS 월간 리포트 — [조직명]
+Gridge AI Observer 월간 리포트 — [조직명]
 
 이번 달 현황:
   레벨: Level 3 (정착기) ↑ (전월 Level 2에서 상승)

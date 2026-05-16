@@ -141,23 +141,23 @@ function routeDecision(node):
 
 **범례:** ✅ 가능 / ❌ 불가 / 보기 = 읽기 전용 / — = 해당 없음
 
-### 4.2 AiOPS 별도 권한 체계 (G-047)
+### 4.2 AI Observer 별도 권한 체계 (G-047)
 
-AiOPS는 기업 AI 사용 모니터링 제품이라 **별도의 3단 권한**을 쓴다 (법적 이슈 대응):
+AI Observer는 기업 AI 사용 모니터링 제품이라 **별도의 3단 권한**을 쓴다 (법적 이슈 대응):
 
-| AiOPS 권한 | 범위 | 수정/삭제 |
+| AI Observer 권한 | 범위 | 수정/삭제 |
 |---|---|---|
 | `super_admin` | org 전체 로그 열람, 계정 관리 | 불가 (변경 금지) |
 | `admin` | 담당 팀(복수 가능) 로그 열람 | 불가 |
 | `member` | 본인 로그만 열람 | 불가 |
 
-**모든 AiOPS 권한은 수정/삭제 불가.** 로그는 immutable.
+**모든 AI Observer 권한은 수정/삭제 불가.** 로그는 immutable.
 
-### G-048 — Wiring ↔ AiOPS 권한 매핑
+### G-048 — Wiring ↔ AI Observer 권한 매핑
 
-Wiring+AiOPS 통합 운영 시 권한 매핑:
+Wiring+AI Observer 통합 운영 시 권한 매핑:
 
-| Wiring 위계 | AiOPS 권한 | 추가 조건 |
+| Wiring 위계 | AI Observer 권한 | 추가 조건 |
 |---|---|---|
 | OA | `super_admin` | 자동 |
 | L1 경영진 | `super_admin` | 기본값, OA가 `admin`으로 강등 가능 |
@@ -165,7 +165,7 @@ Wiring+AiOPS 통합 운영 시 권한 매핑:
 | L3 기술 리드 | `admin` | 담당 팀만 |
 | L4 개발자 | `member` | 본인만 |
 
-**단독 판매 시:** AiOPS만 도입한 고객은 Wiring 위계 없음. AiOPS 3단 권한만 사용.
+**단독 판매 시:** AI Observer만 도입한 고객은 Wiring 위계 없음. AI Observer 3단 권한만 사용.
 
 ---
 
@@ -341,7 +341,7 @@ IdP에서 받은 역할 → Wiring 위계 자동 매핑 규칙:
 - [ ] 클라이언트 조건 분기로 데이터를 숨기려 하고 있지 않은가?
 - [ ] OA만 수행 가능한 행위에 다른 위계 접근이 허용되지 않는가?
 - [ ] 감사 로그 대상 행위가 `G-053` 목록에 포함되어 있는가?
-- [ ] AiOPS 단독 판매 시 Wiring 위계를 요구하지 않는가?
+- [ ] AI Observer 단독 판매 시 Wiring 위계를 요구하지 않는가?
 
 ---
 
@@ -351,6 +351,6 @@ IdP에서 받은 역할 → Wiring 위계 자동 매핑 규칙:
 - 오케스트레이션 뷰 UI: `products/wiring/rules/pipeline_view.md` (PW-002~005)
 - 적합화 탭 필터: `products/wiring/rules/adapt_tab.md` (PW-006~007)
 - 온보딩 3단계 + 위계 할당: `07_PRD F-001` 및 `05_중앙_관리 § 3`
-- AiOPS 권한 체계 상세: `products/aiops/rules/auth.md` (PA-004)
+- AI Observer 권한 체계 상세: `products/aiops/rules/auth.md` (PA-004)
 - SSO 프로토콜 구현: `products/wiring/rules/sso.md` (신규 필요 시)
 - 위계 전환 워크플로우: `93_workflow.md § G-220` (배포 승인)

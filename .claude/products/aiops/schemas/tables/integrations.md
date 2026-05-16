@@ -1,4 +1,4 @@
-# AiOPS / Schemas / integrations — 테이블 본문
+# AI Observer / Schemas / integrations — 테이블 본문
 
 > 외부 도구 연동 상태. Slack / SSO / Jira 등. 조직별 설정.
 

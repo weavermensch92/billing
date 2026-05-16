@@ -54,7 +54,7 @@
 │   ├── /settings/audit-log/[id]      로그 상세 (드로어)
 │   └── /settings/data-export         데이터 내보내기
 │
-└── /app/discover            업셀 허브 (Owner/Admin, AiOPS/Wiring 소개)
+└── /app/discover            업셀 허브 (Owner/Admin, AI Observer/Wiring 소개)
 ```
 
 ---

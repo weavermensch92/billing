@@ -13,6 +13,14 @@ import type {
   ListMembersResult,
   SetSpendLimitInput,
   SetSpendLimitResult,
+  ListWorkspaceMembersInput,
+  ListWorkspaceMembersResult,
+  CreateApiKeyInput,
+  CreateApiKeyResult,
+  GetInvoicesInput,
+  GetInvoicesResult,
+  SetWorkspacePolicyInput,
+  SetWorkspacePolicyResult,
 } from './types'
 
 function mockDelay(): Promise<number> {
@@ -97,6 +105,104 @@ export const mockOpenaiAdapter: VendorAdapter = {
       error: 'unsupported: OpenAI Admin API 는 per-user spend limit 미제공 (Mock)',
       latency_ms,
       is_mock: true,
+    }
+  },
+
+  // ─── v2 신규 메서드 ─────────────────────────────────
+
+  async listWorkspaceMembers(input: ListWorkspaceMembersInput): Promise<ListWorkspaceMembersResult> {
+    await mockDelay()
+    return {
+      ok: true,
+      members: [
+        {
+          vendorUserId: mockId('user', input.vendorWorkspaceId + ':carol'),
+          email: 'carol@acme.com',
+          role: 'owner',
+          addedAt: '2026-01-10T00:00:00Z',
+        },
+        {
+          vendorUserId: mockId('user', input.vendorWorkspaceId + ':dave'),
+          email: 'dave@acme.com',
+          role: 'member',
+          addedAt: '2026-03-01T00:00:00Z',
+        },
+      ],
+    }
+  },
+
+  async createApiKey(input: CreateApiKeyInput): Promise<CreateApiKeyResult> {
+    await mockDelay()
+    const providerKeyId = mockId('sk', input.accountId + ':' + Date.now())
+    const keyValueOnce = `sk-proj-mock-${providerKeyId}-${Math.random().toString(36).slice(2, 14)}`
+    return {
+      ok: true,
+      providerKeyId,
+      keyValueOnce,
+    }
+  },
+
+  async getInvoices(input: GetInvoicesInput): Promise<GetInvoicesResult> {
+    await mockDelay()
+    const invoiceId = mockId('inv', input.vendorWorkspaceId + ':' + input.periodStart)
+    return {
+      ok: true,
+      invoices: [
+        {
+          vendor_invoice_id: invoiceId,
+          vendor_workspace_id: input.vendorWorkspaceId,
+          org_id: '',
+          vendor: 'openai',
+          billing_period_start: input.periodStart,
+          billing_period_end: input.periodEnd,
+          total_usd: 856.78,
+          raw_payload: { mock: true, period: `${input.periodStart} ~ ${input.periodEnd}` },
+          items: [
+            {
+              line_no: 1,
+              item_type: 'api_usage',
+              description: 'GPT-4o tokens',
+              quantity: 30000000,
+              unit: 'tokens',
+              amount_usd: 600,
+              meta: { model: 'gpt-4o' },
+            },
+            {
+              line_no: 2,
+              item_type: 'api_usage',
+              description: 'o1 tokens',
+              quantity: 5000000,
+              unit: 'tokens',
+              amount_usd: 200,
+              meta: { model: 'o1' },
+            },
+            {
+              line_no: 3,
+              item_type: 'seat_license',
+              description: 'Project seats',
+              quantity: 3,
+              unit: 'seats',
+              amount_usd: 56.78,
+              meta: {},
+            },
+          ],
+        },
+      ],
+    }
+  },
+
+  async setWorkspacePolicy(input: SetWorkspacePolicyInput): Promise<SetWorkspacePolicyResult> {
+    await mockDelay()
+    const applied: string[] = []
+    const unsupported: string[] = []
+    if (input.policy.restrictKeyIssuanceToAdmin) applied.push('restrictKeyIssuanceToAdmin')
+    if (input.policy.restrictBillingToOwner) applied.push('restrictBillingToOwner')
+    if (input.policy.forceVendorSso) unsupported.push('forceVendorSso')
+    if (input.policy.requireMfaForAdmin) unsupported.push('requireMfaForAdmin')
+    return {
+      ok: true,
+      appliedFields: applied,
+      unsupportedFields: unsupported,
     }
   },
 }

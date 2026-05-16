@@ -1,4 +1,4 @@
-# AiOPS / Channels / Anthropic — 규칙 본문
+# AI Observer / Channels / Anthropic — 규칙 본문
 
 > PA-005-01 본문. Anthropic API 프록시 구현.
 > Sprint 1 우선 구축. 완전성 100%.

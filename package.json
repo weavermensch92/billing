@@ -61,7 +61,11 @@
     "uninstall-harness": "node scripts/uninstall.js",
     "upgrade-harness": "node scripts/upgrade.js",
     "validate": "node scripts/validate.js",
-    "harness:test": "node scripts/test.js"
+    "harness:test": "node scripts/test.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "vitest run tests/e2e",
+    "test:e2e:real": "USE_REAL_DB=true vitest run tests/e2e"
   },
   "engines": {
     "node": ">=20.0.0"
@@ -86,6 +90,7 @@
     "eslint-config-next": "^14.2.35",
     "postcss": "^8.5.10",
     "tailwindcss": "^3.4.19",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^2.1.8"
   }
 }

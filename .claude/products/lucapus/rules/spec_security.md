@@ -87,7 +87,7 @@ async function approveDeploy() { /* ... */ }
 ### 연관
 
 - `03_hierarchy.md § 3` (G-044) 6단 위계
-- Wiring 위계 vs AiOPS 3단 권한 매핑 (PA-004-01)
+- Wiring 위계 vs AI Observer 3단 권한 매핑 (PA-004-01)
 
 ---
 
@@ -305,5 +305,5 @@ SSOT Verifier T3 + T4:
 - 비밀 정보 로그 금지: `08_security.md § 9` (G-150)
 - 감사 로그 immutable: `08_security.md § 2` (G-141)
 - Wiring SSO: `products/wiring/rules/sso.md` (PW-014)
-- AiOPS 권한: `products/aiops/rules/auth.md` (PA-004)
+- AI Observer 권한: `products/aiops/rules/auth.md` (PA-004)
 - 4-Tier Gate T4: `products/lucapus/rules/gate.md § PL-005-03`

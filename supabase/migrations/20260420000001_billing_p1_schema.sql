@@ -3,7 +3,7 @@
 -- PB-001~PB-013, G-091 Mode D
 -- ============================================================
 
--- billing 스키마 분리 (G-091-06: AiOPS와 물리적 분리)
+-- billing 스키마 분리 (G-091-06: AI Observer와 물리적 분리)
 CREATE SCHEMA IF NOT EXISTS billing;
 
 -- 편의 함수
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS billing.orgs (
   creditback_end_at     DATE,
   deposit_remaining_krw BIGINT NOT NULL DEFAULT 0,
   credit_limit_krw      BIGINT NOT NULL DEFAULT 5000000,
-  aiops_org_id          UUID,                            -- AiOPS 연동 (I-004)
+  aiops_org_id          UUID,                            -- AI Observer 연동 (I-004)
   created_at            TIMESTAMPTZ NOT NULL DEFAULT billing.now_utc(),
   updated_at            TIMESTAMPTZ NOT NULL DEFAULT billing.now_utc()
 );

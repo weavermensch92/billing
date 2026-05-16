@@ -1,4 +1,4 @@
-# AiOPS / Schemas / maturity_scores — 테이블 본문
+# AI Observer / Schemas / maturity_scores — 테이블 본문
 
 > AI 성숙도 주간 스냅샷. PA-010. 개인 · 팀 · 조직 3단 집계.
 

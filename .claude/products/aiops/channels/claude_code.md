@@ -1,4 +1,4 @@
-# AiOPS / Channels / Claude Code — 규칙 본문
+# AI Observer / Channels / Claude Code — 규칙 본문
 
 > PA-005-04 본문. Claude Code CLI 로깅. Anthropic 프록시의 특수 사용 사례.
 

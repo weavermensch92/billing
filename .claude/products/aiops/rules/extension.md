@@ -1,4 +1,4 @@
-# AiOPS / Extension — 규칙 본문
+# AI Observer / Extension — 규칙 본문
 
 > PA-006 본문. Claude.ai / ChatGPT.com / Gemini.google.com 웹 UI의 DOM을 감지하여 로그 수집.
 > Chrome Extension Manifest V3 기반.
@@ -33,7 +33,7 @@
 ```json
 {
   "manifest_version": 3,
-  "name": "Gridge AiOPS Logger",
+  "name": "Gridge AI Observer Logger",
   "version": "1.0.0",
   "description": "AI usage monitoring for enterprise teams",
   "permissions": ["storage", "activeTab"],

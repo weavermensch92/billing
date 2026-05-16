@@ -1,4 +1,4 @@
-# AiOPS / Channels / Cursor — 규칙 본문
+# AI Observer / Channels / Cursor — 규칙 본문
 
 > PA-005-05 본문. Cursor AI 코드 에디터 로깅. BASE_URL 설정 기반.
 

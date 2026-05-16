@@ -99,7 +99,7 @@ ORDER BY us.detected_at DESC;
 클릭 시:
 - **[대화 시작]** → Slack Connect 채널 열기 + 제안 템플릿 미리 채움
 - **[시그널 무시]** → `status = 'dismissed'` + 사유 입력
-- **[제안서 템플릿]** → Wiring/AiOPS 제안서 생성 (실제 데이터 기반)
+- **[제안서 템플릿]** → Wiring/AI Observer 제안서 생성 (실제 데이터 기반)
 
 ## Super 뷰 (전체 플랫폼)
 

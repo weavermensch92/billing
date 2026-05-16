@@ -28,7 +28,7 @@
 Gridge MSP 본류 라인
 ├── Human MSP (개발자 매칭, 기존 본업)
 ├── AI Account MSP (Billing) ← 2026 신규 ★
-├── AiOPS (모니터링·로깅·코칭)
+├── AI Observer (모니터링·로깅·코칭)
 ├── LucaPus (AI Dev Platform)
 └── Wiring AI (개발 플랫폼 UI)
 ```
@@ -116,7 +116,7 @@ F 체인 작업 시 작업 유형에 따라 자동 로드.
 
 ## 6. 통합 / 연동
 
-- **Billing ↔ AiOPS**: AiOPS 사용량 로그 ↔ Billing 실결제 매칭 (`integrations/billing-aiops.md`, v0.20)
+- **Billing ↔ AI Observer**: AI Observer 사용량 로그 ↔ Billing 실결제 매칭 (`integrations/billing-aiops.md`, v0.20)
 - **Billing ↔ Wiring**: CSM 업셀 시그널 → Wiring 도입 제안 (`integrations/billing-wiring.md`, v0.20)
 - **외부 시스템**:
   - 카드사 VCN API (신한 V-Card 1순위, KB SmartPay 백업)
@@ -177,5 +177,5 @@ Phase 0 성공 지표:
 - Mode D 정의: `05_infra_mode.md § 9`
 - 공통 규칙: `rules/00_index.md`
 - 관련 제품:
-  - AiOPS: `products/aiops/CLAUDE.md` (업셀 타겟)
+  - AI Observer: `products/aiops/CLAUDE.md` (업셀 타겟)
   - Wiring: `products/wiring/CLAUDE.md` (업셀 타겟)

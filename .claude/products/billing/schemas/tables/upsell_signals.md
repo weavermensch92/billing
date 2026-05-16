@@ -1,6 +1,6 @@
 # Billing / Schemas / upsell_signals — 테이블 본문
 
-> 업셀 시그널 감지. I-005 파이프라인. Wiring / AiOPS 번들 전환 가능성.
+> 업셀 시그널 감지. I-005 파이프라인. Wiring / AI Observer 번들 전환 가능성.
 
 ---
 
@@ -14,7 +14,7 @@ CREATE TABLE upsell_signals (
   -- 시그널 유형
   signal_type      TEXT NOT NULL CHECK (signal_type IN (
     'wiring_upsell',      -- Wiring 도입 가능성
-    'aiops_bundle',       -- AiOPS 번들 전환
+    'aiops_bundle',       -- AI Observer 번들 전환
     'enterprise_upgrade', -- 엔터프라이즈 플랜
     'contract_extension', -- 계약 연장
     'team_expansion'      -- 추가 팀 도입
@@ -86,7 +86,7 @@ function calculateWiringSignalScore(org: Org): SignalScore {
   let score = 0;
   const evidence = [];
   
-  // 1. AI 도구 사용률 (AiOPS 브릿지 데이터)
+  // 1. AI 도구 사용률 (AI Observer 브릿지 데이터)
   if (org.aiops_org_id) {
     const aiUsagePct = getAiUsagePct(org.aiops_org_id);
     if (aiUsagePct >= 0.6) {
@@ -190,7 +190,7 @@ ORDER BY quarter DESC;
 
 **KPI 목표 (Phase 2)**:
 - Billing → Wiring 전환율 ≥ 10%
-- Billing → AiOPS 번들 전환율 ≥ 20%
+- Billing → AI Observer 번들 전환율 ≥ 20%
 
 ## 참조
 

@@ -42,7 +42,7 @@
 ### 고객 체크
 
 - [ ] **NPS ≥ 8** (Alpha D+90)
-- [ ] **업셀 시그널** 최소 1건 감지 (AiOPS 또는 Wiring)
+- [ ] **업셀 시그널** 최소 1건 감지 (AI Observer 또는 Wiring)
 
 ## PB-013-03. Phase 1 → 2 전환 체크포인트
 
@@ -73,7 +73,7 @@
 ### 제품 체크
 
 - [ ] **전환율 KPI 측정 개시**:
-  - Billing → AiOPS ≥ 20%
+  - Billing → AI Observer ≥ 20%
   - Billing → Wiring ≥ 10%
 - [ ] **크로스셀 케이스 스터디** 최소 2건 작성
 
@@ -149,7 +149,7 @@ Phase 전환 중에도 **기존 고객 서비스는 중단 없음** (점진적).
 
 ### Phase 2 성공 = 표준 상품화 + 확장
 - 월 신규 계약 5개사
-- Billing → AiOPS 전환율 ≥ 20%
+- Billing → AI Observer 전환율 ≥ 20%
 - Billing → Wiring 전환율 ≥ 10%
 
 ## PB-013-08. 자동 검증 체크리스트

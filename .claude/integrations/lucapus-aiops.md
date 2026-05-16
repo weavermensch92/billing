@@ -1,24 +1,24 @@
-# Integrations / LucaPus → AiOPS — 규칙 본문
+# Integrations / LucaPus → AI Observer — 규칙 본문
 
-> I-003 본문. LucaPus AI 에이전트 호출을 AiOPS 에 자동 로깅.
-> 통합 고객: Wiring 내부 에이전트 호출도 AiOPS 대시보드에 집계.
+> I-003 본문. LucaPus AI 에이전트 호출을 AI Observer 에 자동 로깅.
+> 통합 고객: Wiring 내부 에이전트 호출도 AI Observer 대시보드에 집계.
 
 ---
 
-## I-003 — LucaPus → AiOPS 에이전트 호출 로깅 (SHOULD)
+## I-003 — LucaPus → AI Observer 에이전트 호출 로깅 (SHOULD)
 
 ### 목적
 
 **"외부 AI 도구 사용 + LucaPus 내부 AI 사용 = 통합 거버넌스."**
 
-- 직원 개인 Claude / ChatGPT 사용 → AiOPS 로깅 (기존)
+- 직원 개인 Claude / ChatGPT 사용 → AI Observer 로깅 (기존)
 - LucaPus 내부 에이전트 (SSOT Master / BE Developer 등) → 추가 로깅
 - 한 대시보드에서 전체 AI 사용 파악 가능
 
 ### 조건
 
-- 통합 조직만 (Wiring + AiOPS 동시 구독)
-- OA 명시 opt-in (설정 > 연동 > "LucaPus 에이전트 AiOPS 로깅")
+- 통합 조직만 (Wiring + AI Observer 동시 구독)
+- OA 명시 opt-in (설정 > 연동 > "LucaPus 에이전트 AI Observer 로깅")
 - Default OFF (중복 / 노이즈 우려)
 
 ---
@@ -42,7 +42,7 @@ PA-005 채널 목록 확장 시 `custom_sdk` 하위로 분류.
 
 ## I-003-02 — 로그 엔트리 형식 (MUST)
 
-AiOPS `logs` 테이블의 일반 로그와 동일 구조 + 추가 메타:
+AI Observer `logs` 테이블의 일반 로그와 동일 구조 + 추가 메타:
 
 ```typescript
 interface LucaPusLogEntry extends LogEntry {
@@ -71,43 +71,43 @@ PA-007 민감 정보 감지는 그대로 적용:
 
 ### Mode A / C (매니지드)
 
-- LucaPus 에이전트 호출 → 자동 AiOPS 로깅
+- LucaPus 에이전트 호출 → 자동 AI Observer 로깅
 - Gridge 인프라 내부 이벤트 전달
 
 ### Mode B (온프레미스)
 
-- LucaPus + AiOPS 모두 고객 인프라
+- LucaPus + AI Observer 모두 고객 인프라
 - 이벤트 전달은 **고객 내부 네트워크만**
 - Gridge 서버 경유 절대 금지
 
-### Mode B 에서 AiOPS 단독 운영
+### Mode B 에서 AI Observer 단독 운영
 
-- Wiring 없이 AiOPS만 Mode B 로 운영 가능
+- Wiring 없이 AI Observer만 Mode B 로 운영 가능
 - LucaPus 연동 없음 (해당 채널 비활성)
 
 ---
 
 ## I-003-04 — 비용 집계 분리 (MUST)
 
-Wiring 비용과 AiOPS 비용은 **별도 집계**:
+Wiring 비용과 AI Observer 비용은 **별도 집계**:
 
 | 구분 | 관리 |
 |---|---|
 | Wiring 에이전트 비용 | `items.cost_usd` / `items.tokens_used` |
-| AiOPS 외부 도구 비용 | `aiops.logs.cost_usd` |
+| AI Observer 외부 도구 비용 | `aiops.logs.cost_usd` |
 | **통합 뷰** | Wiring "비용 관리" 탭에서 합산 표시 |
 
 ### 더블 카운팅 방지
 
-LucaPus → AiOPS 로깅 시 `cost_usd` 을 AiOPS 에만 기록:
+LucaPus → AI Observer 로깅 시 `cost_usd` 을 AI Observer 에만 기록:
 - Wiring `items.cost_usd` 는 Stage 2+ 작업 단위 집계 목적
-- AiOPS `logs.cost_usd` 는 직원별 / 채널별 거버넌스 목적
+- AI Observer `logs.cost_usd` 는 직원별 / 채널별 거버넌스 목적
 
 **같은 금액이 두 곳 동시 표시될 때 UI 에서 구별 라벨 필수.**
 
 ```
 Wiring 비용:  $8.40  (AI 에이전트 작업, Stage 2)
-AiOPS 비용:   $4.20  (직원 개인 AI + LucaPus 내부 호출)
+AI Observer 비용:   $4.20  (직원 개인 AI + LucaPus 내부 호출)
 통합 총액:    $12.60 (비중복 집계)
 ```
 
@@ -115,7 +115,7 @@ AiOPS 비용:   $4.20  (직원 개인 AI + LucaPus 내부 호출)
 
 ## I-003-05 — 성능 고려 (MUST)
 
-### AiOPS 로깅이 LucaPus 에이전트 속도 영향 X
+### AI Observer 로깅이 LucaPus 에이전트 속도 영향 X
 
 - 비동기 로깅 (PA-003 공통)
 - 에이전트 응답 먼저 → 로그 큐에 enqueue → 배치 insert
@@ -130,7 +130,7 @@ AiOPS 비용:   $4.20  (직원 개인 AI + LucaPus 내부 호출)
 
 ## I-003-06 — 권한 범위 (MUST)
 
-### Wiring 위계 × AiOPS 권한
+### Wiring 위계 × AI Observer 권한
 
 | 위계 | LucaPus 로그 조회 범위 |
 |---|---|
@@ -153,8 +153,8 @@ AiOPS 비용:   $4.20  (직원 개인 AI + LucaPus 내부 호출)
 
 ```
 LucaPus BE Developer (Mode C) → 고객 OpenAI API 키로 호출
-  ├── AiOPS 프록시 경유 (기존 외부 로깅 경로)
-  └── LucaPus 내부 → AiOPS 로깅 (신규 I-003)
+  ├── AI Observer 프록시 경유 (기존 외부 로깅 경로)
+  └── LucaPus 내부 → AI Observer 로깅 (신규 I-003)
 ```
 
 ### 감지 로직
@@ -181,7 +181,7 @@ async function deduplicateLog(log) {
 
 ## I-003-08 — 외부 노출 금지 (MUST, G-004)
 
-AiOPS UI 에 LucaPus 내부 용어 표시 금지:
+AI Observer UI 에 LucaPus 내부 용어 표시 금지:
 
 ❌ "LucaPus Orchestrator 호출"
 ❌ "Plane: spec, Role: orchestrator"
@@ -197,12 +197,12 @@ AiOPS UI 에 LucaPus 내부 용어 표시 금지:
 
 체인 실행 중 아래 감지 시 Conflict 자동 발동:
 
-- [ ] opt-in 없이 LucaPus 로그가 AiOPS 에 전송?
+- [ ] opt-in 없이 LucaPus 로그가 AI Observer 에 전송?
 - [ ] Mode B 에서 Gridge 서버 경유 전달?
-- [ ] Wiring `items.cost_usd` 과 AiOPS `logs.cost_usd` 더블 카운팅?
+- [ ] Wiring `items.cost_usd` 과 AI Observer `logs.cost_usd` 더블 카운팅?
 - [ ] L4 에게 타 사용자 에이전트 프롬프트 노출?
 - [ ] 동일 호출 중복 로깅 (dedupe 실패)?
-- [ ] AiOPS UI 에 "LucaPus" / "Plane" / "Orchestrator" 노출?
+- [ ] AI Observer UI 에 "LucaPus" / "Plane" / "Orchestrator" 노출?
 - [ ] 에이전트 응답 전에 로깅 대기 (latency 영향)?
 - [ ] PII 감지 룰이 LucaPus 로그에는 적용 안 됨?
 
@@ -210,10 +210,10 @@ AiOPS UI 에 LucaPus 내부 용어 표시 금지:
 
 ## 참조
 
-- AiOPS 채널 목록: `products/aiops/rules/channels.md` (PA-005)
-- AiOPS 로그 모델: `products/aiops/rules/data_model.md` (PA-001)
-- AiOPS 비동기 로깅: `products/aiops/rules/proxy.md` (PA-003)
-- AiOPS PII 감지: `products/aiops/rules/governance.md` (PA-007)
+- AI Observer 채널 목록: `products/aiops/rules/channels.md` (PA-005)
+- AI Observer 로그 모델: `products/aiops/rules/data_model.md` (PA-001)
+- AI Observer 비동기 로깅: `products/aiops/rules/proxy.md` (PA-003)
+- AI Observer PII 감지: `products/aiops/rules/governance.md` (PA-007)
 - LucaPus 오케스트레이터: `products/lucapus/orchestrators/roles.md` (PL-002~003)
 - LucaPus 하네스 감사: `products/lucapus/orchestrators/harness.md § PL-004-04`
 - 통합 조직 조건: `integrations/aiops-wiring.md` (I-001)

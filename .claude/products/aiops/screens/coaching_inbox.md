@@ -1,4 +1,4 @@
-# AiOPS / Screens / coaching_inbox — `/app/coaching`
+# AI Observer / Screens / coaching_inbox — `/app/coaching`
 
 > 개인 맞춤 코칭 카드 수신함. Member 가 가장 자주 보는 화면. AI 활용 개선 제안 + 실습 가능한 팁.
 

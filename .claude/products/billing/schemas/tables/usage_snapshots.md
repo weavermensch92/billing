@@ -1,6 +1,6 @@
 # Billing / Schemas / usage_snapshots — 테이블 본문
 
-> AiOPS 브릿지 일일 사용량 집계. I-004 파이프라인. "이번 달 예상 비용" 표시 데이터 소스.
+> AI Observer 브릿지 일일 사용량 집계. I-004 파이프라인. "이번 달 예상 비용" 표시 데이터 소스.
 
 ---
 
@@ -22,7 +22,7 @@ CREATE TABLE usage_snapshots (
   input_tokens           BIGINT DEFAULT 0,
   output_tokens          BIGINT DEFAULT 0,
   
-  -- 예상 비용 (AiOPS 추정)
+  -- 예상 비용 (AI Observer 추정)
   estimated_cost_krw     BIGINT NOT NULL,
   
   -- 출처
@@ -30,7 +30,7 @@ CREATE TABLE usage_snapshots (
                          CHECK (source IN ('aiops_bridge','manual','reconciled')),
   
   -- 원본 참조
-  aiops_snapshot_id      UUID,             -- AiOPS 측 usage_snapshot 연결
+  aiops_snapshot_id      UUID,             -- AI Observer 측 usage_snapshot 연결
   
   created_at             TIMESTAMPTZ NOT NULL DEFAULT now(),
   
@@ -48,7 +48,7 @@ CREATE INDEX idx_usage_snapshots_source ON usage_snapshots(source, snapshot_date
 
 매일 03:00 배치:
 ```sql
--- AiOPS aiops.usage_snapshots 에서 MSP 브릿지 고객만
+-- AI Observer aiops.usage_snapshots 에서 MSP 브릿지 고객만
 INSERT INTO billing.usage_snapshots (
   org_id, account_id, service_id, snapshot_date,
   api_calls, input_tokens, output_tokens,
@@ -148,6 +148,6 @@ FROM estimated, actual;
 ## 참조
 
 - I-004 교차 검증: `integrations/billing-aiops.md`
-- AiOPS 측 logs: `products/aiops/schemas/tables/logs.md`
+- AI Observer 측 logs: `products/aiops/schemas/tables/logs.md`
 - 이상 감지 (aiops_billing_gap): `rules/anomaly_detection.md` (PB-012-04)
 - 고객 포털 "이번 달 예상": `screens/customer/home.md § StatCard`

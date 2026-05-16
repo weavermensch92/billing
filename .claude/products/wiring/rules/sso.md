@@ -329,4 +329,4 @@ G-004 정합. SSO 설정 UI / 에러 메시지에 다음 금지:
 - 암호화 / 시크릿: `08_security.md § 4, 9` (G-143, G-150)
 - Org Admin UI: `products/wiring/screens/org_admin.md § PW-010-05`
 - 외부 노출 금지: `01_product.md § 4` (G-004)
-- AiOPS 3단 권한 매핑: `products/aiops/rules/auth.md § PA-004-06`
+- AI Observer 3단 권한 매핑: `products/aiops/rules/auth.md § PA-004-06`

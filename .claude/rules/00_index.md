@@ -11,7 +11,7 @@
 |---|---|---|
 | `G-xxx` | 그릿지 공통 규칙 | `rules/` |
 | `D-001~D-105` | LucaPus spec-common | `products/lucapus/rules/` |
-| `PA-xxx` | AiOPS 제품 전용 | `products/aiops/rules/` |
+| `PA-xxx` | AI Observer 제품 전용 | `products/aiops/rules/` |
 | `PL-xxx` | LucaPus 전용 (spec-common 외) | `products/lucapus/rules/` |
 | `PW-xxx` | Wiring AI 전용 | `products/wiring/rules/` |
 | `PB-xxx` | Billing MSP 전용 (Mode D) | `products/billing/rules/` |
@@ -29,9 +29,9 @@
 ### G-001~G-019 제품/도메인
 | ID | 제목 | 강제 | 파일 |
 |---|---|---|---|
-| G-001 | 3제품 정체성 (AiOPS/LucaPus/Wiring) | MUST | `01_product.md` |
+| G-001 | 3제품 정체성 (AI Observer/LucaPus/Wiring) | MUST | `01_product.md` |
 | G-002 | 제품 간 경계와 연동 포인트 (직접 연동 금지, integrations/ 경유) | MUST | `01_product.md` |
-| G-003 | AiOPS = Wiring 내장 vs 단독 판매 분기 | MUST | `01_product.md` |
+| G-003 | AI Observer = Wiring 내장 vs 단독 판매 분기 | MUST | `01_product.md` |
 | G-004 | 외부 노출 용어 분기 (금지어 + 대안) | MUST | `01_product.md` |
 | G-005 | 제품 전략 3원칙 (적합화=개발자/CTO→PM/"돕는다") | MUST | `01_product.md` |
 | G-006 | BM 요약 (라이선스 + 모드별 AI 비용) | SHOULD | `01_product.md` |
@@ -62,8 +62,8 @@
 | G-044 | 적합화 큐 자동 라우팅 (🔷=L3, 🔶비즈=L2) | MUST | `03_hierarchy.md` |
 | G-045 | 위계 × 기능 매트릭스 | MUST | `03_hierarchy.md` |
 | G-046 | SSO 역할 매핑 (SAML/OIDC/SCIM) | SHOULD | `03_hierarchy.md` |
-| G-047 | AiOPS 별도 권한 체계 (super_admin/admin/member) | MUST | `03_hierarchy.md` |
-| G-048 | Wiring ↔ AiOPS 권한 매핑 | MUST | `03_hierarchy.md` |
+| G-047 | AI Observer 별도 권한 체계 (super_admin/admin/member) | MUST | `03_hierarchy.md` |
+| G-048 | Wiring ↔ AI Observer 권한 매핑 | MUST | `03_hierarchy.md` |
 | G-049 | 특수 행위 권한 (하네스 재설계/공동 승인/금지 행위) | MUST | `03_hierarchy.md` |
 | G-050 | 오케스트레이션 뷰 스코프 (위계별 노출) | MUST | `03_hierarchy.md` |
 | G-051 | 위계 전환 규칙 (승급/강등/재라우팅) | MUST | `03_hierarchy.md` |
@@ -227,7 +227,7 @@
 
 ---
 
-## 3. PA-xxx : AiOPS 전용
+## 3. PA-xxx : AI Observer 전용
 
 | ID | 제목 | 강제 | 파일 |
 |---|---|---|---|
@@ -311,10 +311,10 @@
 
 | ID | 제목 | 방향 | 파일 |
 |---|---|---|---|
-| I-001 | AiOPS → Wiring 로그 파이프라인 | AiOPS→Wiring | `integrations/aiops-wiring.md` |
+| I-001 | AI Observer → Wiring 로그 파이프라인 | AI Observer→Wiring | `integrations/aiops-wiring.md` |
 | I-002 | Wiring ↔ LucaPus 적합화 데이터 동기화 | 양방향 | `integrations/wiring-lucapus.md` |
-| I-003 | LucaPus → AiOPS 에이전트 호출 로깅 | LucaPus→AiOPS | `integrations/lucapus-aiops.md` |
-| I-004 | Billing ↔ AiOPS 실결제·사용량 교차 검증 | 양방향 | `integrations/billing-aiops.md` |
+| I-003 | LucaPus → AI Observer 에이전트 호출 로깅 | LucaPus→AI Observer | `integrations/lucapus-aiops.md` |
+| I-004 | Billing ↔ AI Observer 실결제·사용량 교차 검증 | 양방향 | `integrations/billing-aiops.md` |
 | I-005 | Billing → Wiring CSM 업셀 시그널 | Billing→Wiring | `integrations/billing-wiring.md` |
 
 카탈로그 + 공통 원칙: `integrations/INDEX.md`
@@ -358,7 +358,7 @@
 
 | 키워드 | 자동 로드 |
 |---|---|
-| AiOPS, 옵저버, observer, 프록시, 로깅, 익스텐션, 크롤러 | `products/aiops/CLAUDE.md` |
+| AI Observer, 옵저버, observer, 프록시, 로깅, 익스텐션, 크롤러 | `products/aiops/CLAUDE.md` |
 | LucaPus, 루카퍼스, CLI, `gridge adapt`, 4-Plane, 오케스트레이터 | `products/lucapus/CLAUDE.md` |
 | Wiring, 와이어링, 불혹, 칸반, 파이프라인, 적합화 탭 | `products/wiring/CLAUDE.md` |
 
@@ -374,7 +374,7 @@
 | Org Admin, 조직 관리 페이지, 팀 생성 | `03_hierarchy.md § 4.1` |
 | 하네스 재설계, 모델 배정 변경 | `03_hierarchy.md § 5.3` + `02_architecture § 4` + `PL-004` |
 | 위계 승급, 강등, 권한 변경, 재라우팅 | `03_hierarchy.md § 8` |
-| AiOPS 권한, super_admin, member, admin_teams | `03_hierarchy.md § 4.2` + `PA-004` |
+| AI Observer 권한, super_admin, member, admin_teams | `03_hierarchy.md § 4.2` + `PA-004` |
 | 4-Plane, Policy Plane, Spec Plane, Dev Plane, Ops Plane | `02_architecture.md § 1` |
 | 3 Orchestrators, SSOT Master, Scrum Master, Tech Leader | `02_architecture.md § 2` |
 | Executor, BE Developer, QA Verifier, 추론 격리 | `02_architecture.md § 2~3` |
@@ -444,9 +444,9 @@
 | 도메인 이벤트, Pub/Sub, Kafka, 이벤트 버전, idempotency | `products/lucapus/rules/spec_event.md` (D-072~076) |
 | 네이밍 컨벤션, 무음 실패, any 금지, Linter, Formatter | `products/lucapus/rules/spec_coding.md` (D-077~090) |
 | 소셜 로그인, OAuth2, Vendor 격리, 파일 업로드, 검색, 다국어, GDPR | `products/lucapus/rules/spec_misc.md` (D-091~105) |
-| 통합 고객, AiOPS 로그 Wiring 대시보드, 단일 뷰 | `integrations/aiops-wiring.md` (I-001) |
+| 통합 고객, AI Observer 로그 Wiring 대시보드, 단일 뷰 | `integrations/aiops-wiring.md` (I-001) |
 | 적합화 결정 반영, HITL → 엔진, CLI ↔ 웹 동기화, 이벤트 버스 | `integrations/wiring-lucapus.md` (I-002) |
-| 에이전트 호출 로깅, LucaPus → AiOPS, 이중 집계 방지 | `integrations/lucapus-aiops.md` (I-003) |
+| 에이전트 호출 로깅, LucaPus → AI Observer, 이중 집계 방지 | `integrations/lucapus-aiops.md` (I-003) |
 | Jira, Slack, GitHub PR, Jenkins, ArgoCD, SonarQube, Confluence, Teams, 외부 연동 | `integrations/lucapus-external.md` (L-001~015) |
 | 하네스 재설계 요청, 배정 이벤트, 세션 상태, 인프라 상태 | `integrations/harness-api.md` (H-001~005) |
 | Anthropic API 프록시, x-api-key, anthropic-version | `products/aiops/channels/anthropic.md` |
@@ -483,7 +483,7 @@
 | 세금계산서, Smart Bill, 세계서, 발행 실패, 수정 발행 | `products/billing/playbook/smartbill.md` |
 | 법무 자문, 세무 자문, 리셀러 정합성, 전자금융거래법, 부가세 | `products/billing/playbook/legal-tax-review.md` |
 | 이관, 해지, 재계약, D-30, D+30, 완전 삭제, 데이터 ZIP | `products/billing/playbook/termination.md` |
-| Billing ↔ AiOPS, 교차 검증, aiops_bridge_enabled, MSP대행 | `integrations/billing-aiops.md` (I-004) |
+| Billing ↔ AI Observer, 교차 검증, aiops_bridge_enabled, MSP대행 | `integrations/billing-aiops.md` (I-004) |
 | Billing → Wiring, CSM 업셀, 크레딧백 종료, 번들 전환 | `integrations/billing-wiring.md` (I-005) |
 | Service-First UX, 고객 요청만, AM 실행, Fast Path 30%+ | `products/billing/rules/service_first.md` (PB-008) |
 | 회계 분리 엔진, enforce_accounting_fields 트리거, v_transaction_customer 뷰 | `products/billing/rules/accounting_split_engine.md` (PB-009) |
@@ -492,7 +492,7 @@
 | 이상 감지, anomaly_events, anomaly_rules, decline_burst, aiops_billing_gap | `products/billing/rules/anomaly_detection.md` (PB-012) |
 | Phase 전환, 체크포인트, Red Flag, Phase 0/1/2 전환 리뷰 | `products/billing/rules/phase_transition.md` (PB-013) |
 | Billing 카탈로그 (rules/schemas_tables/screens/playbook INDEX) | `products/billing/*/INDEX.md` |
-| AiOPS 테이블 (orgs/users/logs/audit_logs), prompt_storage, infra_mode | `products/aiops/schemas/tables/*.md` |
+| AI Observer 테이블 (orgs/users/logs/audit_logs), prompt_storage, infra_mode | `products/aiops/schemas/tables/*.md` |
 | Billing customer 홈, StatCard 4개, 최근 활동 타임라인, 도넛 | `products/billing/screens/customer/home.md` |
 | Billing 서비스 관리, 4탭 (구독/API/에이전트), 계정 상세 드로어 | `products/billing/screens/customer/services.md` |
 | Billing 신규 요청 wizard, 5유형, new_account/terminate/limit_change | `products/billing/screens/customer/services_new.md` |
@@ -510,9 +510,9 @@
 | Billing 멤버 관리, 초대, Owner 양도, 역할 변경 | `products/billing/screens/customer/org_members.md` |
 | Billing 오프보딩 3단계 wizard, 영향 미리보기, 절감 계산, 액션 선택 | `products/billing/screens/customer/org_members_offboarding.md` |
 | Billing 결제 모니터링, 거절 큐, 이상 이벤트, 매입 미확정 | `products/billing/screens/console/payments.md` |
-| AiOPS alerts (PA-009), maturity_scores (PA-010), 주간 스냅샷 | `products/aiops/schemas/tables/alerts.md`, `maturity_scores.md` |
+| AI Observer alerts (PA-009), maturity_scores (PA-010), 주간 스냅샷 | `products/aiops/schemas/tables/alerts.md`, `maturity_scores.md` |
 | Billing P2 (teams, am_assignments, payment_receipts, overdue_actions, export_jobs) | `products/billing/schemas/tables/*.md` |
-| AiOPS P2 (integrations, usage_patterns), Slack/SSO 연동 설정, 일간 사용 집계 | `products/aiops/schemas/tables/integrations.md`, `usage_patterns.md` |
+| AI Observer P2 (integrations, usage_patterns), Slack/SSO 연동 설정, 일간 사용 집계 | `products/aiops/schemas/tables/integrations.md`, `usage_patterns.md` |
 | phase-check.js, PB-013 자동 스캔, 기술/운영/재무/고객 체크포인트 | `scripts/phase-check.js` |
 | GitHub Actions CI, validate + test + install 자동화 | `.github/workflows/validate.yml` |
 | Wiring P1 테이블 (orgs, teams, users, user_teams, projects, agents) 본문 | `products/wiring/schemas/tables/*.md` |
@@ -527,12 +527,12 @@
 | LucaPus 4-Plane 스펙 워크벤치, Problem/Solution/Contract/Context, 모호성 감지, 준비도 점수 | `products/lucapus/screens/spec_workbench.md` |
 | LucaPus 3 Orchestrator 시각화, 실시간 로그, 산출물 뷰, HITL 일시 중지 | `products/lucapus/screens/orchestrator_view.md` |
 | LucaPus 실행 이력, 실패 패턴 분석, 재시도 모달, 비용 집계 | `products/lucapus/screens/pipeline_runs.md` |
-| AiOPS 대시보드, 조직 AI 사용 현황, 채널별, 이상 알림, 비용 분해 | `products/aiops/screens/dashboard.md` |
-| AiOPS 로그 탐색, 민감 정보 하이라이트, 세션 그룹화, 역할별 가시성 | `products/aiops/screens/logs_explorer.md` |
-| AiOPS 성숙도 대시보드, 4축 레이더, 주간 추이, 회귀 감지, 팀 비교 | `products/aiops/screens/maturity_view.md` |
-| AiOPS 코칭 카드 수신함, 개인 맞춤 추천, 챌린지 자동 추적, 북마크 | `products/aiops/screens/coaching_inbox.md` |
+| AI Observer 대시보드, 조직 AI 사용 현황, 채널별, 이상 알림, 비용 분해 | `products/aiops/screens/dashboard.md` |
+| AI Observer 로그 탐색, 민감 정보 하이라이트, 세션 그룹화, 역할별 가시성 | `products/aiops/screens/logs_explorer.md` |
+| AI Observer 성숙도 대시보드, 4축 레이더, 주간 추이, 회귀 감지, 팀 비교 | `products/aiops/screens/maturity_view.md` |
+| AI Observer 코칭 카드 수신함, 개인 맞춤 추천, 챌린지 자동 추적, 북마크 | `products/aiops/screens/coaching_inbox.md` |
 | Mode D, 결제 레일, 직교 축, Billing Proxy | `05_infra_mode.md § 12` (G-091) |
-| 제품 정체성, AiOPS, LucaPus, Wiring 관계 | `01_product.md` |
+| 제품 정체성, AI Observer, LucaPus, Wiring 관계 | `01_product.md` |
 | 파트너, 데모, 제안서, 외부 노출, 금지어 | `01_product.md § 4` |
 | BM, 라이선스, Starter, Growth, Enterprise | `01_product.md § 6` |
 

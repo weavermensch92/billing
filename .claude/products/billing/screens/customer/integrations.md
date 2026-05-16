@@ -127,7 +127,7 @@
 
 ## 데이터 모델
 
-Billing `integrations` 테이블 (AiOPS `integrations` 와 별개, G-091-06):
+Billing `integrations` 테이블 (AI Observer `integrations` 와 별개, G-091-06):
 ```sql
 -- v0.26+ 별도 스키마 파일로 본문화
 CREATE TABLE integrations (

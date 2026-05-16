@@ -1,4 +1,4 @@
-# AiOPS / Proxy — 규칙 본문
+# AI Observer / Proxy — 규칙 본문
 
 > PA-002, PA-003 본문. AI 벤더 API를 프록시하여 자동 로깅하는 서버.
 > Sprint 1의 심장. 모든 채널 로깅의 공통 엔진.

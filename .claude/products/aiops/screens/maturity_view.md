@@ -1,4 +1,4 @@
-# AiOPS / Screens / maturity_view — `/app/maturity`
+# AI Observer / Screens / maturity_view — `/app/maturity`
 
 > AI 성숙도 4축 대시보드. 개인 · 팀 · 조직 3 scope. 주간 스냅샷 추이 + 회귀 감지 + 강점/약점 분석.
 

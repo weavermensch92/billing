@@ -2,7 +2,7 @@
 
 > LucaPus 엔진 관련 DB 테이블 카탈로그.
 > F/S 체인의 탐색 단계(§ 2.2)가 참조.
-> Wiring / AiOPS 의 schemas/INDEX.md 와 함께 전체 스키마 공간 형성.
+> Wiring / AI Observer 의 schemas/INDEX.md 와 함께 전체 스키마 공간 형성.
 
 ---
 
@@ -149,7 +149,7 @@ CREATE POLICY "ontology_system_write"
 
 ## 스키마 마이그레이션
 
-- Supabase 마이그레이션: `supabase/migrations/` (Wiring / AiOPS 공용)
+- Supabase 마이그레이션: `supabase/migrations/` (Wiring / AI Observer 공용)
 - LucaPus 엔진은 자체 migration runner 보유 가능
 - 버전 태깅: `lucapus-{YYYY-MM-DD}-{slug}.sql`
 
@@ -164,7 +164,7 @@ CREATE POLICY "ontology_system_write"
 ## 참조
 
 - Wiring schemas INDEX: `products/wiring/schemas/INDEX.md`
-- AiOPS schemas INDEX: `products/aiops/schemas/INDEX.md`
+- AI Observer schemas INDEX: `products/aiops/schemas/INDEX.md`
 - Gate 규칙: `products/lucapus/rules/gate.md` (PL-005)
 - 온톨로지 규칙: `products/lucapus/rules/ontology.md` (PL-007)
 - 하네스 규칙: `products/lucapus/orchestrators/harness.md` (PL-004)

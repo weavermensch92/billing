@@ -1,4 +1,4 @@
-# AiOPS / Channels / ChatGPT Crawler — 규칙 본문
+# AI Observer / Channels / ChatGPT Crawler — 규칙 본문
 
 > PA-005-06 본문. ChatGPT 웹 대화 수집. 공유 링크 기반 크롤러 방식.
 > 완전성: ⚠️ 70%. 사용자 협조 필요.
@@ -96,7 +96,7 @@ CREATE INDEX idx_crawler_active ON crawler_targets(active, last_crawled_at);
 
 1. 직원이 ChatGPT 에서 새 대화방 생성 + **공유 ON** (Settings → Data controls → Shared links)
 2. 공유 링크 복사 (예: `https://chatgpt.com/share/abc-def-...`)
-3. AiOPS 대시보드 → 설정 → 공유 링크 등록 → URL + 세션 제목 입력
+3. AI Observer 대시보드 → 설정 → 공유 링크 등록 → URL + 세션 제목 입력
 4. 크롤러가 15분 후 첫 수집 → 대시보드에 로그 나타남
 
 ### 주의: 개인정보
@@ -131,7 +131,7 @@ ChatGPT iOS / Android 앱에서도 공유 링크 생성 가능:
 - [ ] 공유 링크에 민감 내용 있을 때 PII 경고 없이 저장?
 - [ ] 15분 주기 크롤링이 동일 링크 중복 저장 (last_message_count 체크 누락)?
 - [ ] 삭제된 링크 (404) 를 무한 재시도?
-- [ ] 크롤러 User-Agent 에 "AiOPS Bot" 표시 없음 (OpenAI 차단 리스크)?
+- [ ] 크롤러 User-Agent 에 "AI Observer Bot" 표시 없음 (OpenAI 차단 리스크)?
 
 ---
 

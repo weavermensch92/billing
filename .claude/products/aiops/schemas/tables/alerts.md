@@ -1,4 +1,4 @@
-# AiOPS / Schemas / alerts — 테이블 본문
+# AI Observer / Schemas / alerts — 테이블 본문
 
 > 감지된 이상 알림. PA-009. Slack / 이메일 발송 큐 역할.
 

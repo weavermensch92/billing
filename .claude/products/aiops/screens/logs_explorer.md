@@ -1,4 +1,4 @@
-# AiOPS / Screens / logs_explorer — `/app/logs`
+# AI Observer / Screens / logs_explorer — `/app/logs`
 
 > 로그 탐색 + 필터 + 상세. 역할별 가시 범위 자동 적용.
 
