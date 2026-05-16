@@ -2,11 +2,14 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
-const NAV_ITEMS = [
+type NavItem = { href: string; label: string; superOnly?: boolean }
+
+const NAV_ITEMS: NavItem[] = [
   { href: '/console/home',     label: '홈' },
   { href: '/console/orgs',     label: '고객사' },
   { href: '/console/requests', label: '요청 큐' },
   { href: '/console/payments', label: '결제 모니터링' },
+  { href: '/console/admins',   label: '관리자 계정', superOnly: true },
 ]
 
 export default async function ConsoleLayout({ children }: { children: React.ReactNode }) {
@@ -41,16 +44,18 @@ export default async function ConsoleLayout({ children }: { children: React.Reac
             <p className="text-xs text-gray-400 mt-1">Billing MSP 운영</p>
           </div>
           <nav className="p-4 space-y-1">
-            {NAV_ITEMS.map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
-                className="flex items-center px-3 py-2 text-sm text-gray-300
-                           hover:bg-gray-700 hover:text-white rounded-lg transition-colors"
-              >
-                {label}
-              </Link>
-            ))}
+            {NAV_ITEMS
+              .filter(item => !item.superOnly || adminUser.role === 'super')
+              .map(({ href, label }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="flex items-center px-3 py-2 text-sm text-gray-300
+                             hover:bg-gray-700 hover:text-white rounded-lg transition-colors"
+                >
+                  {label}
+                </Link>
+              ))}
           </nav>
           <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-700 space-y-2">
             <div>

@@ -275,6 +275,13 @@ export interface MockAuth {
     verify: (params: unknown) => Promise<{ data: unknown; error: null }>
     unenroll: (params: unknown) => Promise<{ data: unknown; error: null }>
   }
+  // service-role 전용 (createServiceRoleClient 경유 시에만 호출). Mock 에서는 즉시 성공만 반환.
+  admin: {
+    inviteUserByEmail: (
+      email: string,
+      opts?: { redirectTo?: string; data?: Record<string, unknown> },
+    ) => Promise<{ data: { user: { id: string; email: string } } | null; error: { message: string } | null }>
+  }
 }
 
 export interface MockStorage {
@@ -310,6 +317,12 @@ export function createMockClient(currentUserEmail: string | null) {
       challenge: async () => ({ data: { id: 'mock-challenge' }, error: null }),
       verify: async () => ({ data: null, error: null }),
       unenroll: async () => ({ data: null, error: null }),
+    },
+    admin: {
+      inviteUserByEmail: async (email: string) => ({
+        data: { user: { id: crypto.randomUUID(), email } },
+        error: null,
+      }),
     },
   }
 
