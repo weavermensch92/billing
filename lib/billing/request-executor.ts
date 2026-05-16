@@ -67,6 +67,7 @@ interface ActionRequestRow {
 export async function executeRequestCompletion(
   supabase: SBLike,
   requestId: string,
+  options?: { resolved_by?: string },
 ): Promise<ExecResult> {
   const { data: req } = (await supabase
     .from('action_requests')
@@ -82,6 +83,10 @@ export async function executeRequestCompletion(
 
   if (req.status === 'completed') {
     return { ok: true, affected: {} } // idempotent
+  }
+
+  if (options?.resolved_by) {
+    req.resolved_by = options.resolved_by
   }
 
   try {
