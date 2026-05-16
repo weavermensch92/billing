@@ -3,9 +3,11 @@ import { adminLogin } from './actions'
 export default function ConsoleLoginPage({
   searchParams,
 }: {
-  searchParams: { error?: string; message?: string; step?: string }
+  searchParams: { error?: string; message?: string; step?: string; t?: string }
 }) {
   const step = searchParams.step ?? '1'
+  // 매 에러 시도마다 다른 nonce(t)가 붙어 카드가 재마운트 → shake 애니메이션 재생
+  const shakeKey = searchParams.error ? `err-${searchParams.t ?? '0'}` : 'ok'
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
@@ -15,7 +17,10 @@ export default function ConsoleLoginPage({
           <p className="text-sm text-gray-400 mt-1">운영 전용 콘솔 · 2FA 필수</p>
         </div>
 
-        <div className="bg-gray-800 rounded-xl border border-gray-700 p-8">
+        <div
+          key={shakeKey}
+          className={`bg-gray-800 rounded-xl border border-gray-700 p-8 ${searchParams.error ? 'animate-shake' : ''}`}
+        >
           {searchParams.message && (
             <div className="mb-4 p-3 bg-green-900/30 border border-green-700 rounded-lg text-sm text-green-400">
               {searchParams.message}
