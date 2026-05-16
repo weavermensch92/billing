@@ -13,7 +13,9 @@
  */
 
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { redirect } from 'next/navigation'
 import { createMockSupabase } from '@/lib/mock/client'
+import { ConfigError, actionErrorMessage } from '@/lib/errors'
 
 const MOCK_MODE = process.env.NEXT_PUBLIC_MOCK_MODE === 'true'
 
@@ -25,12 +27,31 @@ export function createServiceRoleClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-  if (!url || !serviceKey) {
-    throw new Error('SUPABASE_SERVICE_ROLE_KEY missing — required for cron/webhook routes')
+  if (!url) {
+    throw new ConfigError('NEXT_PUBLIC_SUPABASE_URL')
+  }
+  if (!serviceKey) {
+    throw new ConfigError('SUPABASE_SERVICE_ROLE_KEY')
   }
 
   return createSupabaseClient(url, serviceKey, {
     db: { schema: 'billing' },
     auth: { persistSession: false, autoRefreshToken: false },
   })
+}
+
+/**
+ * Server Action 용 안전 래퍼. 환경 변수 누락 등 throw 시
+ * errorPath 로 redirect (한국어 메시지 포함). 정상이면 client 반환.
+ *
+ * 사용:
+ *   const service = createServiceRoleClientOrRedirect(PAGE)
+ */
+export function createServiceRoleClientOrRedirect(errorPath: string) {
+  try {
+    return createServiceRoleClient()
+  } catch (err) {
+    console.error('[createServiceRoleClient]', err)
+    redirect(`${errorPath}?error=${encodeURIComponent(actionErrorMessage(err))}`)
+  }
 }

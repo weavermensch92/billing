@@ -2,8 +2,14 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
+import { actionErrorMessage, isRedirectError } from '@/lib/errors'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+
+function errorRedirect(path: string, err: unknown): never {
+  console.error('[admin-action]', err)
+  redirect(`${path}?error=${encodeURIComponent(actionErrorMessage(err))}`)
+}
 
 const ALLOWED_ROLES = ['super', 'am', 'finance', 'ops'] as const
 type AdminRole = (typeof ALLOWED_ROLES)[number]
@@ -68,30 +74,35 @@ export async function updateAdminRole(formData: FormData) {
     )
   }
 
-  const serviceRole = createServiceRoleClient()
-  const { error } = await serviceRole
-    .from('admin_users')
-    .update({ role: nextRole })
-    .eq('id', adminId)
+  try {
+    const serviceRole = createServiceRoleClient()
+    const { error } = await serviceRole
+      .from('admin_users')
+      .update({ role: nextRole })
+      .eq('id', adminId)
 
-  if (error) {
-    redirect(
-      `/console/admins/${adminId}?error=` +
-        encodeURIComponent('역할 변경 실패: ' + error.message),
-    )
+    if (error) {
+      redirect(
+        `/console/admins/${adminId}?error=` +
+          encodeURIComponent('역할 변경 실패: ' + error.message),
+      )
+    }
+
+    await serviceRole.from('audit_logs').insert({
+      org_id: null,
+      actor_type: 'admin',
+      actor_id: me.id,
+      actor_email: user.email ?? null,
+      action: 'admin_role_changed',
+      target_type: 'admin_user',
+      target_id: adminId,
+      visibility: 'internal_only',
+      detail: { email: target.email, before: target.role, after: nextRole },
+    })
+  } catch (err) {
+    if (isRedirectError(err)) throw err
+    errorRedirect(`/console/admins/${adminId}`, err)
   }
-
-  await serviceRole.from('audit_logs').insert({
-    org_id: null,
-    actor_type: 'admin',
-    actor_id: me.id,
-    actor_email: user.email ?? null,
-    action: 'admin_role_changed',
-    target_type: 'admin_user',
-    target_id: adminId,
-    visibility: 'internal_only',
-    detail: { email: target.email, before: target.role, after: nextRole },
-  })
 
   revalidatePath('/console/admins')
   revalidatePath(`/console/admins/${adminId}`)
@@ -123,30 +134,35 @@ export async function toggleAdminActive(formData: FormData) {
     )
   }
 
-  const serviceRole = createServiceRoleClient()
-  const { error } = await serviceRole
-    .from('admin_users')
-    .update({ is_active: nextActive })
-    .eq('id', adminId)
+  try {
+    const serviceRole = createServiceRoleClient()
+    const { error } = await serviceRole
+      .from('admin_users')
+      .update({ is_active: nextActive })
+      .eq('id', adminId)
 
-  if (error) {
-    redirect(
-      `/console/admins/${adminId}?error=` +
-        encodeURIComponent('상태 변경 실패: ' + error.message),
-    )
+    if (error) {
+      redirect(
+        `/console/admins/${adminId}?error=` +
+          encodeURIComponent('상태 변경 실패: ' + error.message),
+      )
+    }
+
+    await serviceRole.from('audit_logs').insert({
+      org_id: null,
+      actor_type: 'admin',
+      actor_id: me.id,
+      actor_email: user.email ?? null,
+      action: nextActive ? 'admin_activated' : 'admin_deactivated',
+      target_type: 'admin_user',
+      target_id: adminId,
+      visibility: 'internal_only',
+      detail: { email: target.email, role: target.role },
+    })
+  } catch (err) {
+    if (isRedirectError(err)) throw err
+    errorRedirect(`/console/admins/${adminId}`, err)
   }
-
-  await serviceRole.from('audit_logs').insert({
-    org_id: null,
-    actor_type: 'admin',
-    actor_id: me.id,
-    actor_email: user.email ?? null,
-    action: nextActive ? 'admin_activated' : 'admin_deactivated',
-    target_type: 'admin_user',
-    target_id: adminId,
-    visibility: 'internal_only',
-    detail: { email: target.email, role: target.role },
-  })
 
   revalidatePath('/console/admins')
   revalidatePath(`/console/admins/${adminId}`)

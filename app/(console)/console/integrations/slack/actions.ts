@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { createServiceRoleClient } from '@/lib/supabase/service-role'
+import { createServiceRoleClientOrRedirect } from '@/lib/supabase/service-role'
 import { storeSecret, readSecret, updateSecret } from '@/lib/vault/secrets'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
@@ -95,7 +95,7 @@ export async function saveSlackConfig(formData: FormData) {
     redirect(`${PAGE}?error=` + encodeURIComponent('Signing Secret 이 너무 짧습니다.'))
   }
 
-  const service = createServiceRoleClient()
+  const service = createServiceRoleClientOrRedirect(PAGE)
 
   // 현재 행 조회 (없으면 INSERT, 있으면 UPDATE)
   const { data: existing } = await service
@@ -232,7 +232,7 @@ export async function saveSlackConfig(formData: FormData) {
 
 export async function testSlackConnection() {
   const { user, me } = await authorizeSuper()
-  const service = createServiceRoleClient()
+  const service = createServiceRoleClientOrRedirect(PAGE)
 
   const { data: cfg } = await service
     .from('slack_integration')
@@ -302,7 +302,7 @@ export async function testSlackConnection() {
 
 export async function disableSlackIntegration() {
   const { user, me } = await authorizeSuper()
-  const service = createServiceRoleClient()
+  const service = createServiceRoleClientOrRedirect(PAGE)
 
   const { error } = await service
     .from('slack_integration')
