@@ -15,7 +15,7 @@ import { verifyCronAuth } from '@/lib/cron/auth'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
-export const maxDuration = 600 // 10분
+export const maxDuration = 300 // 5분 (Hobby 플랜 상한)
 
 function previousMonthRange(): { start: string; end: string } {
   const now = new Date()
