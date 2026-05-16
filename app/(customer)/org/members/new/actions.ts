@@ -46,7 +46,7 @@ export async function inviteMember(formData: FormData) {
   })
 
   if (error) {
-    redirect(`/org/members/new?error=${encodeURIComponent('${encodeURIComponent(\'초대 실패: \' + error.message)}')}`)
+    redirect(`/org/members/new?error=${encodeURIComponent('초대 실패: ' + error.message)}`)
   }
 
   // 감사 로그 기록

@@ -91,7 +91,7 @@ export async function exportAuditLogCsv(formData: FormData) {
     .upload(storagePath, csv, { contentType: 'text/csv; charset=utf-8', upsert: true })
 
   if (upErr) {
-    redirect(`/settings/audit-log?error=${encodeURIComponent('${encodeURIComponent(\'CSV 생성 실패: \' + upErr.message)}')}`)
+    redirect(`/settings/audit-log?error=${encodeURIComponent('CSV 생성 실패: ' + upErr.message)}`)
   }
 
   const { data: signed } = await supabase.storage

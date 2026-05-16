@@ -72,7 +72,7 @@ export async function submitOffboarding(formData: FormData) {
   }).select('id').single()
 
   if (parentErr || !parentReq) {
-    redirect(`/org/members/${target_member_id}/offboarding?error=${encodeURIComponent('${encodeURIComponent(\'부모 요청 생성 실패: \' + (parentErr?.message ?? \'\'))}')}`)
+    redirect(`/org/members/${target_member_id}/offboarding?error=${encodeURIComponent('부모 요청 생성 실패: ' + (parentErr?.message ?? ''))}`)
   }
 
   // 2) 자식 요청 (계정별)
@@ -91,7 +91,7 @@ export async function submitOffboarding(formData: FormData) {
   if (childRequests.length > 0) {
     const { error: childErr } = await supabase.from('action_requests').insert(childRequests)
     if (childErr) {
-      redirect(`/org/members/${target_member_id}/offboarding?error=${encodeURIComponent('${encodeURIComponent(\'자식 요청 생성 실패: \' + childErr.message)}')}`)
+      redirect(`/org/members/${target_member_id}/offboarding?error=${encodeURIComponent('자식 요청 생성 실패: ' + childErr.message)}`)
     }
   }
 

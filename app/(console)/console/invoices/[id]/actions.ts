@@ -34,7 +34,7 @@ export async function issueInvoice(formData: FormData) {
     .single()
 
   if (error || !invoice) {
-    redirect(`/console/invoices/${invoice_id}?error=${encodeURIComponent('${encodeURIComponent(\'발행 실패: \' + (error?.message ?? \'unknown\'))}')}`)
+    redirect(`/console/invoices/${invoice_id}?error=${encodeURIComponent('발행 실패: ' + (error?.message ?? 'unknown'))}`)
   }
 
   if (invoice.requires_super_approval && !invoice.super_approved_at) {
@@ -70,7 +70,7 @@ export async function superApprove(formData: FormData) {
     .eq('id', invoice_id).select('org_id').single()
 
   if (error || !invoice) {
-    redirect(`/console/invoices/${invoice_id}?error=${encodeURIComponent('${encodeURIComponent(\'승인 실패: \' + (error?.message ?? \'unknown\'))}')}`)
+    redirect(`/console/invoices/${invoice_id}?error=${encodeURIComponent('승인 실패: ' + (error?.message ?? 'unknown'))}`)
   }
 
   await ctx.supabase.from('audit_logs').insert({
@@ -110,7 +110,7 @@ export async function recordTaxInvoice(formData: FormData) {
     .eq('id', invoice_id).select('org_id').single()
 
   if (error || !invoice) {
-    redirect(`/console/invoices/${invoice_id}?error=${encodeURIComponent('${encodeURIComponent(\'기록 실패: \' + (error?.message ?? \'unknown\'))}')}`)
+    redirect(`/console/invoices/${invoice_id}?error=${encodeURIComponent('기록 실패: ' + (error?.message ?? 'unknown'))}`)
   }
 
   await ctx.supabase.from('audit_logs').insert({

@@ -15,7 +15,7 @@
  */
 
 import { getDecryptedToken } from './token-broker'
-import { getVendorAdapter } from './index'
+import { getVendorAdapter, type VendorName } from './index'
 
 type SBLike = {
   from: (t: string) => any
@@ -78,7 +78,7 @@ export async function syncTokenMembers(
     if (!decrypted) throw new Error('token missing or revoked')
 
     // 2) 벤더 어댑터 호출
-    const adapter = getVendorAdapter(tokenRow.vendor)
+    const adapter = getVendorAdapter(tokenRow.vendor as VendorName)
     if (!adapter || typeof adapter.listWorkspaceMembers !== 'function') {
       throw new Error(`vendor adapter ${tokenRow.vendor} does not implement listWorkspaceMembers`)
     }

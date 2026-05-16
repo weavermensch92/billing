@@ -48,7 +48,7 @@ export async function requestExport(formData: FormData) {
   })
 
   if (error) {
-    redirect(`/settings/data-export?error=${encodeURIComponent('${encodeURIComponent(\'요청 실패: \' + error.message)}')}`)
+    redirect(`/settings/data-export?error=${encodeURIComponent('요청 실패: ' + error.message)}`)
   }
 
   revalidatePath('/settings/data-export')
