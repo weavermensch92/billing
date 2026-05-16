@@ -68,17 +68,14 @@ export default async function NewRequestPage({
       )}
 
       <RequestWizard
-        member={{ id: member.id, role: member.role }}
+        currentMemberRole={member.role as 'owner' | 'admin' | 'member'}
         services={servicesRes.data ?? []}
         members={membersRes.data ?? []}
         accounts={accountsRes.data ?? []}
-        org={{
-          headroomKrw: orgHeadroom,
-          headroomUsed: orgUsed,
-          walletRemainingKrw: walletRemaining,
-        }}
+        headroomKrw={orgHeadroom}
+        headroomRemainingKrw={headroomRemaining}
         initialType={searchParams.type ?? 'new_account'}
-        initialAccountId={searchParams.account_id ?? null}
+        initialAccountId={searchParams.account_id ?? undefined}
       />
 
       <div className="border border-gray-200 p-4 bg-gray-50 text-xs space-y-1">

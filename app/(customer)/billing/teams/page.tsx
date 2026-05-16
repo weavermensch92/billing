@@ -40,9 +40,10 @@ export default async function TeamsPage({
 
   const org = (orgRes.data ?? { self_approval_headroom_krw: 0, self_approval_used_krw: 0 }) as { self_approval_headroom_krw: number; self_approval_used_krw: number }
   const teams = (teamsRes.data ?? []) as TeamRow[]
-  const headroomMap = new Map((headroomRes.data ?? []).map((h: HeadroomRow) => [h.team_id, h]))
+  const headroomRows = (headroomRes.data ?? []) as HeadroomRow[]
+  const headroomMap = new Map<string, HeadroomRow>(headroomRows.map((h) => [h.team_id, h]))
 
-  const totalAllocated = (headroomRes.data ?? []).reduce((s: number, h: HeadroomRow) => s + (h.headroom_limit_krw ?? 0), 0)
+  const totalAllocated = headroomRows.reduce((s, h) => s + (h.headroom_limit_krw ?? 0), 0)
   const orgHeadroom = org.self_approval_headroom_krw ?? 0
   const orgUsed = org.self_approval_used_krw ?? 0
   const allocationGapKrw = orgHeadroom - totalAllocated

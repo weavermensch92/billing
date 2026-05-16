@@ -15,7 +15,7 @@
  */
 
 import { getDecryptedToken } from './token-broker'
-import { getVendorAdapter } from './index'
+import { getVendorAdapter, type VendorName } from './index'
 
 type SBLike = {
   from: (t: string) => any
@@ -77,8 +77,8 @@ export async function applyWorkspacePolicy(
     })
     if (!decrypted) throw new Error('token missing or revoked')
 
-    const adapter = getVendorAdapter(params.vendor)
-    if (typeof adapter.setWorkspacePolicy !== 'function') {
+    const adapter = getVendorAdapter(params.vendor as VendorName)
+    if (!adapter || typeof adapter.setWorkspacePolicy !== 'function') {
       result.unsupportedFields.push('all')
       result.errors.push(`adapter ${params.vendor} does not implement setWorkspacePolicy`)
       return result

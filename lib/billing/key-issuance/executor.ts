@@ -17,7 +17,7 @@
  */
 
 import { consumeQuota } from './quota'
-import { getVendorAdapter } from '../../vendor-api/index'
+import { getVendorAdapter, type VendorName } from '../../vendor-api/index'
 import { getDecryptedToken } from '../../vendor-api/token-broker'
 
 type SBLike = {
@@ -88,7 +88,7 @@ export async function issueKey(supabase: SBLike, input: IssueKeyInput): Promise<
     })
     if (!decrypted) throw new Error('vendor admin token missing')
 
-    const adapter = getVendorAdapter(input.vendor)
+    const adapter = getVendorAdapter(input.vendor as VendorName)
     if (!adapter || typeof adapter.createApiKey !== 'function') {
       throw new Error(`adapter ${input.vendor} does not implement createApiKey`)
     }

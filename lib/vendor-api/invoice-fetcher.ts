@@ -16,7 +16,7 @@
  */
 
 import { getDecryptedToken } from './token-broker'
-import { getVendorAdapter } from './index'
+import { getVendorAdapter, type VendorName } from './index'
 import { saveVendorInvoice, type RawVendorInvoice } from '../billing/vendor-invoice/fetcher'
 
 type SBLike = {
@@ -75,8 +75,8 @@ export async function fetchInvoicesForToken(
     })
     if (!decrypted) throw new Error('token missing or revoked')
 
-    const adapter = getVendorAdapter(tokenRow.vendor)
-    if (typeof adapter.getInvoices !== 'function') {
+    const adapter = getVendorAdapter(tokenRow.vendor as VendorName)
+    if (!adapter || typeof adapter.getInvoices !== 'function') {
       throw new Error(`vendor adapter ${tokenRow.vendor} does not implement getInvoices yet`)
     }
 
