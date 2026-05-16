@@ -51,4 +51,9 @@ VALUES
   -- ⚠️ Lovable (검토 중)
   ('Lovable Pro', 'lovable', 'agent_credit', 'pending',
    '에이전트 크레딧 기반. 법인 결제 및 재판매 조항 검토 필요. 분기 실사 예정.',
-   NULL, '2026-07-01', 'passthrough', FALSE, NULL);
+   NULL, '2026-07-01', 'passthrough', FALSE, NULL),
+
+  -- ✅ Gridge (자체 게이트웨이 상품)
+  ('Gridge AI API', 'gridge', 'api', 'approved',
+   '그릿지 자체 게이트웨이 (api.gridge.ai). 외부 약관 실사 불필요. 등급별 상품은 billing.gridge_api_products 에서 관리.',
+   '2026-05-16', '2027-05-16', 'passthrough', FALSE, NULL);
