@@ -105,7 +105,7 @@ export default async function NewVendorKeyPage({
             ))}
           </select>
           <p className="text-xs text-gray-500 mt-1">
-            account.status='active' + provider_workspace_id 가 채워진 계정만.
+            account.status=&apos;active&apos; + provider_workspace_id 가 채워진 계정만.
           </p>
         </div>
 
@@ -152,7 +152,7 @@ export default async function NewVendorKeyPage({
             <li>고객 Org 의 Quota 정책을 그대로 따름 (시간당 한도 / 쿨다운). 차단 시 Org 정책 수정 후 재시도.</li>
             <li>벤더 API 호출이 실패하면 발급 실패. quota 카운터는 그대로 차감 (블록 정책).</li>
             <li>발급 후 평문 키는 화면에 1회만 노출. 분실 시 새로 발급.</li>
-            <li>대행 발급 사실은 양측 감사 로그에 기록 (visibility='both').</li>
+            <li>대행 발급 사실은 양측 감사 로그에 기록 (visibility=&apos;both&apos;).</li>
           </ul>
         </div>
 
