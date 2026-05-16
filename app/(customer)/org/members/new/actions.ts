@@ -13,7 +13,7 @@ export async function inviteMember(formData: FormData) {
     .from('members').select('id, org_id, role').eq('user_id', user.id).eq('status', 'active').single()
 
   if (!currentMember || !['owner', 'admin'].includes(currentMember.role)) {
-    redirect('/org/members/new?error=권한이 없습니다.')
+    redirect('/org/members/new?error=' + encodeURIComponent('권한이 없습니다.'))
   }
 
   const email = (formData.get('email') as string).toLowerCase().trim()
@@ -22,7 +22,7 @@ export async function inviteMember(formData: FormData) {
 
   // owner 초대 금지
   if (currentMember.role === 'admin' && role === 'admin') {
-    redirect('/org/members/new?error=Admin은 Admin을 초대할 수 없습니다. Owner에게 요청하세요.')
+    redirect('/org/members/new?error=' + encodeURIComponent('Admin은 Admin을 초대할 수 없습니다. Owner에게 요청하세요.'))
   }
 
   // 중복 체크
@@ -32,9 +32,9 @@ export async function inviteMember(formData: FormData) {
 
   if (existing) {
     if (existing.status === 'offboarded') {
-      redirect('/org/members/new?error=해당 이메일은 이미 오프보딩 처리되었습니다. 관리자에게 문의하세요.')
+      redirect('/org/members/new?error=' + encodeURIComponent('해당 이메일은 이미 오프보딩 처리되었습니다. 관리자에게 문의하세요.'))
     }
-    redirect('/org/members/new?error=이미 초대된 이메일입니다.')
+    redirect('/org/members/new?error=' + encodeURIComponent('이미 초대된 이메일입니다.'))
   }
 
   // members 레코드 생성
@@ -46,7 +46,7 @@ export async function inviteMember(formData: FormData) {
   })
 
   if (error) {
-    redirect(`/org/members/new?error=${encodeURIComponent('초대 실패: ' + error.message)}`)
+    redirect(`/org/members/new?error=${encodeURIComponent('${encodeURIComponent(\'초대 실패: \' + error.message)}')}`)
   }
 
   // 감사 로그 기록

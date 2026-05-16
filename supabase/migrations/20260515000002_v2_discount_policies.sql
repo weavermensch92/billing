@@ -149,8 +149,8 @@ COMMENT ON FUNCTION billing.start_discount_period_on_first_account_active IS
 CREATE OR REPLACE FUNCTION billing.renew_discount_policy(
   p_org_id        UUID,
   p_new_rate      NUMERIC(5,4),
-  p_new_months    INT DEFAULT 6,
   p_super_id      UUID,
+  p_new_months    INT DEFAULT 6,
   p_reason        TEXT DEFAULT 'period_renewal'
 ) RETURNS UUID AS $$
 DECLARE

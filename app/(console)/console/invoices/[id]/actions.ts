@@ -34,11 +34,11 @@ export async function issueInvoice(formData: FormData) {
     .single()
 
   if (error || !invoice) {
-    redirect(`/console/invoices/${invoice_id}?error=${encodeURIComponent('발행 실패: ' + (error?.message ?? 'unknown'))}`)
+    redirect(`/console/invoices/${invoice_id}?error=${encodeURIComponent('${encodeURIComponent(\'발행 실패: \' + (error?.message ?? \'unknown\'))}')}`)
   }
 
   if (invoice.requires_super_approval && !invoice.super_approved_at) {
-    redirect(`/console/invoices/${invoice_id}?error=Super 승인이 필요합니다.`)
+    redirect(`/console/invoices/${invoice_id}?error=${encodeURIComponent('Super 승인이 필요합니다.')}`)
   }
 
   await ctx.supabase.from('audit_logs').insert({
@@ -55,7 +55,7 @@ export async function issueInvoice(formData: FormData) {
 
   revalidatePath(`/console/invoices/${invoice_id}`)
   revalidatePath('/console/invoices')
-  redirect(`/console/invoices/${invoice_id}?success=청구서가 발행되었습니다.`)
+  redirect(`/console/invoices/${invoice_id}?success=${encodeURIComponent('청구서가 발행되었습니다.')}`)
 }
 
 export async function superApprove(formData: FormData) {
@@ -70,7 +70,7 @@ export async function superApprove(formData: FormData) {
     .eq('id', invoice_id).select('org_id').single()
 
   if (error || !invoice) {
-    redirect(`/console/invoices/${invoice_id}?error=${encodeURIComponent('승인 실패: ' + (error?.message ?? 'unknown'))}`)
+    redirect(`/console/invoices/${invoice_id}?error=${encodeURIComponent('${encodeURIComponent(\'승인 실패: \' + (error?.message ?? \'unknown\'))}')}`)
   }
 
   await ctx.supabase.from('audit_logs').insert({
@@ -86,7 +86,7 @@ export async function superApprove(formData: FormData) {
   })
 
   revalidatePath(`/console/invoices/${invoice_id}`)
-  redirect(`/console/invoices/${invoice_id}?success=Super 승인 완료. 이제 발행할 수 있습니다.`)
+  redirect(`/console/invoices/${invoice_id}?success=${encodeURIComponent('Super 승인 완료. 이제 발행할 수 있습니다.')}`)
 }
 
 export async function approveInvoice(formData: FormData) {
@@ -101,7 +101,7 @@ export async function recordTaxInvoice(formData: FormData) {
   const invoice_id = formData.get('invoice_id') as string
   const tax_invoice_id = (formData.get('tax_invoice_id') as string).trim()
   if (!tax_invoice_id) {
-    redirect(`/console/invoices/${invoice_id}?error=거래번호를 입력하세요.`)
+    redirect(`/console/invoices/${invoice_id}?error=${encodeURIComponent('거래번호를 입력하세요.')}`)
   }
 
   const { data: invoice, error } = await ctx.supabase
@@ -110,7 +110,7 @@ export async function recordTaxInvoice(formData: FormData) {
     .eq('id', invoice_id).select('org_id').single()
 
   if (error || !invoice) {
-    redirect(`/console/invoices/${invoice_id}?error=${encodeURIComponent('기록 실패: ' + (error?.message ?? 'unknown'))}`)
+    redirect(`/console/invoices/${invoice_id}?error=${encodeURIComponent('${encodeURIComponent(\'기록 실패: \' + (error?.message ?? \'unknown\'))}')}`)
   }
 
   await ctx.supabase.from('audit_logs').insert({
@@ -126,5 +126,5 @@ export async function recordTaxInvoice(formData: FormData) {
   })
 
   revalidatePath(`/console/invoices/${invoice_id}`)
-  redirect(`/console/invoices/${invoice_id}?success=세금계산서 거래번호가 기록되었습니다.`)
+  redirect(`/console/invoices/${invoice_id}?success=${encodeURIComponent('세금계산서 거래번호가 기록되었습니다.')}`)
 }

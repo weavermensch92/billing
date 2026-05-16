@@ -26,7 +26,7 @@ export default async function OffboardingPage({
     .from('members').select('id, org_id, role').eq('user_id', user.id).eq('status', 'active').single()
 
   if (!currentMember || !['owner', 'admin'].includes(currentMember.role)) {
-    redirect('/org/members?error=권한이 없습니다.')
+    redirect('/org/members?error=' + encodeURIComponent('권한이 없습니다.'))
   }
 
   const { data: targetMember } = await supabase

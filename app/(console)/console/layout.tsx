@@ -22,7 +22,7 @@ export default async function ConsoleLayout({ children }: { children: React.Reac
     .eq('is_active', true)
     .single()
 
-  if (!adminUser) redirect('/console/login?error=관리자 계정이 아닙니다.')
+  if (!adminUser) redirect('/console/login?error=' + encodeURIComponent('관리자 계정이 아닙니다.'))
 
   const roleLabel: Record<string, string> = {
     super: '슈퍼 어드민',

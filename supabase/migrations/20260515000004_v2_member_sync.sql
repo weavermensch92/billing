@@ -190,7 +190,7 @@ CREATE TRIGGER trg_shadow_findings_updated_at
 -- ─── 6. anomaly_rules seed — 워크스페이스 결제 단절 룰 ────
 -- M-1005가 적용하는 신규 1건. (기존 anomaly_detection.sql 패턴 유지)
 INSERT INTO billing.anomaly_rules (
-  code, category, severity, title, description, is_active
+  rule_code, category, severity, name, description, is_active
 ) VALUES (
   'workspace_payment_break',
   'cross_check',
@@ -199,4 +199,4 @@ INSERT INTO billing.anomaly_rules (
   '활성 멤버가 있는 워크스페이스에서 24h 동안 그릿지 카드 거래가 0건 — 카드가 다른 결제수단으로 변경됐을 가능성. 그림자 admin 시나리오.',
   TRUE
 )
-ON CONFLICT (code) DO NOTHING;
+ON CONFLICT (rule_code) DO NOTHING;

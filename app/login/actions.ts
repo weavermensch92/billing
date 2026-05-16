@@ -15,10 +15,10 @@ export async function login(formData: FormData) {
   })
 
   if (error) {
-    redirect('/login?error=이메일 전송에 실패했습니다.')
+    redirect('/login?error=' + encodeURIComponent('이메일 전송에 실패했습니다.'))
   }
 
-  redirect('/login?message=로그인 링크를 이메일로 보냈습니다. 확인해 주세요.')
+  redirect('/login?message=' + encodeURIComponent('로그인 링크를 이메일로 보냈습니다. 확인해 주세요.'))
 }
 
 export async function signOut() {

@@ -133,6 +133,18 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 COMMENT ON FUNCTION billing.daily_auto_approve_pending IS
   '24h 만료된 pending_approval account 자동 active 전이. 관대 모드 디폴트.';
 
+-- ─── 4.5 accounts 테이블에 그림자 검수용 컬럼 5개 보장 ───
+ALTER TABLE billing.accounts
+  ADD COLUMN IF NOT EXISTS provider               TEXT,
+  ADD COLUMN IF NOT EXISTS provider_user_id       TEXT,
+  ADD COLUMN IF NOT EXISTS email                  TEXT,
+  ADD COLUMN IF NOT EXISTS approval_status        TEXT NOT NULL DEFAULT 'active',
+  ADD COLUMN IF NOT EXISTS pending_approval_until TIMESTAMPTZ;
+
+CREATE INDEX IF NOT EXISTS idx_accounts_approval_status
+  ON billing.accounts(approval_status)
+  WHERE approval_status = 'pending_approval';
+
 
 -- ─── 5. v_pending_approvals 뷰 ───────────────────────────
 CREATE OR REPLACE VIEW billing.v_pending_approvals
@@ -160,5 +172,4 @@ COMMENT ON VIEW billing.v_pending_approvals IS
 -- 여기서는 명시 코멘트만.
 
 COMMENT ON COLUMN billing.accounts.approval_status IS
-  'active = 정상 / pending_approval = 24h 검수 / rejected = 사용량 매핑 X (미할당 처리). '
-  || 'allocate_invoice_item_single 호출자(lib/billing/usage-allocator.ts)가 rejected 체크.';
+  'active = 정상 / pending_approval = 24h 검수 / rejected = 사용량 매핑 X (미할당 처리). allocate_invoice_item_single 호출자(lib/billing/usage-allocator.ts)가 rejected 체크.';

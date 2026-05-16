@@ -17,7 +17,7 @@ export async function submitOffboarding(formData: FormData) {
   const { data: currentMember } = await supabase
     .from('members').select('id, org_id, role').eq('user_id', user.id).eq('status', 'active').single()
   if (!currentMember || !['owner', 'admin'].includes(currentMember.role)) {
-    redirect('/org/members?error=권한이 없습니다.')
+    redirect('/org/members?error=' + encodeURIComponent('권한이 없습니다.'))
   }
 
   const target_member_id = formData.get('target_member_id') as string
@@ -26,22 +26,22 @@ export async function submitOffboarding(formData: FormData) {
 
   // 본인 비밀번호 재확인
   if (!user.email || !confirm_password) {
-    redirect(`/org/members/${target_member_id}/offboarding?error=비밀번호를 입력하세요.`)
+    redirect(`/org/members/${target_member_id}/offboarding?error=${encodeURIComponent('비밀번호를 입력하세요.')}`)
   }
   const { error: pwErr } = await supabase.auth.signInWithPassword({
     email: user.email, password: confirm_password,
   })
   if (pwErr) {
-    redirect(`/org/members/${target_member_id}/offboarding?error=비밀번호가 일치하지 않습니다.`)
+    redirect(`/org/members/${target_member_id}/offboarding?error=${encodeURIComponent('비밀번호가 일치하지 않습니다.')}`)
   }
 
   // 대상 멤버 검증
   const { data: target } = await supabase
     .from('members').select('id, name, role, status').eq('id', target_member_id)
     .eq('org_id', currentMember.org_id).single()
-  if (!target) redirect('/org/members?error=대상 멤버를 찾을 수 없습니다.')
+  if (!target) redirect('/org/members?error=' + encodeURIComponent('대상 멤버를 찾을 수 없습니다.'))
   if (target.role === 'owner') {
-    redirect(`/org/members/${target_member_id}/offboarding?error=Owner는 오프보딩할 수 없습니다.`)
+    redirect(`/org/members/${target_member_id}/offboarding?error=${encodeURIComponent('Owner는 오프보딩할 수 없습니다.')}`)
   }
 
   // 영향 집계
@@ -72,7 +72,7 @@ export async function submitOffboarding(formData: FormData) {
   }).select('id').single()
 
   if (parentErr || !parentReq) {
-    redirect(`/org/members/${target_member_id}/offboarding?error=${encodeURIComponent('부모 요청 생성 실패: ' + (parentErr?.message ?? ''))}`)
+    redirect(`/org/members/${target_member_id}/offboarding?error=${encodeURIComponent('${encodeURIComponent(\'부모 요청 생성 실패: \' + (parentErr?.message ?? \'\'))}')}`)
   }
 
   // 2) 자식 요청 (계정별)
@@ -91,7 +91,7 @@ export async function submitOffboarding(formData: FormData) {
   if (childRequests.length > 0) {
     const { error: childErr } = await supabase.from('action_requests').insert(childRequests)
     if (childErr) {
-      redirect(`/org/members/${target_member_id}/offboarding?error=${encodeURIComponent('자식 요청 생성 실패: ' + childErr.message)}`)
+      redirect(`/org/members/${target_member_id}/offboarding?error=${encodeURIComponent('${encodeURIComponent(\'자식 요청 생성 실패: \' + childErr.message)}')}`)
     }
   }
 

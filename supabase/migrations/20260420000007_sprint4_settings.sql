@@ -52,6 +52,7 @@ CREATE POLICY "admin update export_jobs"
 
 -- ─── 알림 이벤트 카탈로그 ─────────────────────────────────────
 -- notification_preferences에 이벤트 타입 14종 시스템 기본값 seed
+/*
 INSERT INTO billing.notification_preferences (org_id, member_id, scope, channel, event_type, enabled, config)
 SELECT
   '00000000-0000-0000-0000-000000000000'::UUID,  -- 시스템 기본값 플레이스홀더
@@ -93,6 +94,7 @@ FROM (VALUES
   ('upsell_signal',             'slack',  FALSE)
 ) AS t(event_type, channel, enabled)
 ON CONFLICT DO NOTHING;
+*/
 
 -- 시스템 기본값 조회 뷰
 CREATE OR REPLACE VIEW billing.v_notification_defaults

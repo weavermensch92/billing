@@ -16,7 +16,7 @@ export default async function InviteMemberPage({
     .from('members').select('role').eq('user_id', user.id).eq('status', 'active').single()
 
   if (!currentMember || !['owner', 'admin'].includes(currentMember.role)) {
-    redirect('/org/members?error=권한이 없습니다.')
+    redirect('/org/members?error=' + encodeURIComponent('권한이 없습니다.'))
   }
 
   return (

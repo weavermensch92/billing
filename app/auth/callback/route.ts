@@ -14,5 +14,5 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.redirect(`${origin}/login?error=인증에 실패했습니다.`)
+  return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent('${encodeURIComponent(\'인증에 실패했습니다.\')}')}`)
 }

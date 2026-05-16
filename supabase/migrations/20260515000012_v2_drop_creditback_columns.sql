@@ -29,10 +29,9 @@ BEGIN
       SET default_discount_rate = COALESCE(oc.creditback_rate, 0.10)
       FROM billing.org_contracts oc
       WHERE oc.org_id = o.id
-        AND oc.status = 'active'
         AND oc.idx = (
           SELECT MAX(idx) FROM billing.org_contracts
-          WHERE org_id = o.id AND status = 'active'
+          WHERE org_id = o.id
         );
   END IF;
 END $$;
