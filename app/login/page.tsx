@@ -1,24 +1,28 @@
-import { login } from './actions'
+import { loginWithPassword, loginWithMagicLink } from './actions'
 
 export default function LoginPage({
   searchParams,
 }: {
-  searchParams: { error?: string; message?: string }
+  searchParams: { error?: string; message?: string; mode?: string }
 }) {
+  const isMagicLinkMode = searchParams.mode === 'magic-link'
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        {/* 로고 */}
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-brand-700">Gridge</h1>
           <p className="text-sm text-gray-500 mt-1">AI 서비스 통합 관리 플랫폼</p>
         </div>
 
-        {/* 로그인 카드 */}
         <div className="card p-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">이메일로 로그인</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            {isMagicLinkMode ? '매직 링크로 로그인' : '로그인'}
+          </h2>
           <p className="text-sm text-gray-500 mb-6">
-            등록된 이메일로 로그인 링크를 보내드립니다.
+            {isMagicLinkMode
+              ? '등록된 이메일로 로그인 링크를 보내드립니다.'
+              : '이메일과 비밀번호를 입력해 주세요.'}
           </p>
 
           {searchParams.message && (
@@ -32,7 +36,7 @@ export default function LoginPage({
             </div>
           )}
 
-          <form action={login} className="space-y-4">
+          <form action={isMagicLinkMode ? loginWithMagicLink : loginWithPassword} className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                 이메일
@@ -49,14 +53,44 @@ export default function LoginPage({
               />
             </div>
 
+            {!isMagicLinkMode && (
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                  비밀번호
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  minLength={8}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
+                             focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                />
+              </div>
+            )}
+
             <button
               type="submit"
               className="w-full bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium
                          py-2.5 px-4 rounded-lg transition-colors"
             >
-              로그인 링크 받기
+              {isMagicLinkMode ? '로그인 링크 받기' : '로그인'}
             </button>
           </form>
+
+          <div className="mt-4 text-center text-xs">
+            {isMagicLinkMode ? (
+              <a href="/login" className="text-brand-600 hover:underline">
+                ← 비밀번호로 로그인
+              </a>
+            ) : (
+              <a href="/login?mode=magic-link" className="text-brand-600 hover:underline">
+                비밀번호를 잊으셨나요? 매직 링크로 로그인
+              </a>
+            )}
+          </div>
 
           <p className="text-xs text-gray-400 text-center mt-6">
             Gridge Billing MSP 계약 고객만 사용 가능합니다.

@@ -13,7 +13,9 @@ export default async function CustomerHomePage() {
     .eq('user_id', user.id)
     .eq('status', 'active')
     .single()
-  if (!member) redirect('/login')
+  // active member 가 없으면 초대 수락 페이지로. /login 으로 보내면 매직 링크 클릭 후
+  // 무한 루프가 됨 (콜백 → /home → /login → 다시 매직 링크).
+  if (!member) redirect('/accept-invite')
 
   const [orgRes, balanceRes, discountRes, recentChargesRes, pendingApprovalsRes] = await Promise.all([
     supabase.from('orgs').select('name, self_approval_headroom_krw, self_approval_used_krw, billing_day_of_month').eq('id', member.org_id).single(),
