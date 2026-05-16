@@ -413,7 +413,7 @@ export function NewOrgWizard() {
             <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
               <p className="text-sm font-medium text-orange-900">다음 작업이 수행됩니다</p>
               <ol className="mt-2 text-sm text-orange-800 list-decimal list-inside space-y-0.5">
-                <li>orgs 테이블에 신규 레코드 생성 (plan='prepaid_v2', v2 정책 컬럼 4개 포함)</li>
+                <li>orgs 테이블에 신규 레코드 생성 (plan=&apos;prepaid_v2&apos;, v2 정책 컬럼 4개 포함)</li>
                 <li>org_contracts 레코드 생성 (계약 조건만, creditback 컬럼은 v2에서 폐기됨)</li>
                 <li>미할당 팀 자동 생성 (M-1005 트리거)</li>
                 <li>Owner 멤버 초대 (status=invited)</li>

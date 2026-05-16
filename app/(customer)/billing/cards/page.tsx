@@ -91,7 +91,7 @@ export default async function CardsPage() {
       </div>
 
       <div className="text-xs text-gray-500 border-l-[3px] border-l-gray-300 pl-3 py-2">
-        5분 조회는 2FA 재확인 후 활성화됩니다. 조회는 audit_logs(visibility='org_internal')에 기록됩니다.
+        5분 조회는 2FA 재확인 후 활성화됩니다. 조회는 audit_logs(visibility=&apos;org_internal&apos;)에 기록됩니다.
         카드 교체는 Idea 1 가이드 (수동 입력 + 1회 토큰 등록).
       </div>
     </div>
