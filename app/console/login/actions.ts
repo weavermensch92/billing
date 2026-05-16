@@ -33,7 +33,10 @@ export async function adminLogin(formData: FormData) {
   // Step 1: 이메일 + 비밀번호
   const { error } = await supabase.auth.signInWithPassword({ email, password })
   if (error) {
-    redirect('/console/login?error=' + encodeURIComponent('이메일 또는 비밀번호가 올바르지 않습니다.'))
+    redirect(
+      '/console/login?error=' +
+        encodeURIComponent(`로그인 실패: ${error.message} (status=${error.status ?? '?'}, code=${error.code ?? '?'})`),
+    )
   }
 
   // 2FA 강제 정책 (role별)
