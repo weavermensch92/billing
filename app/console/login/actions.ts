@@ -67,7 +67,9 @@ export async function adminLogin(formData: FormData) {
     .single()
 
   // 보안: super / finance는 2FA 필수 (PB-005 감사 대상 접근 권한)
-  const requires2fa = adminUser?.role === 'super' || adminUser?.role === 'finance'
+  // CONSOLE_2FA_REQUIRED=false 일 때만 일시적으로 우회. 기본은 강제 유지.
+  const enforce2fa = process.env.CONSOLE_2FA_REQUIRED !== 'false'
+  const requires2fa = enforce2fa && (adminUser?.role === 'super' || adminUser?.role === 'finance')
   if (requires2fa && !adminUser?.totp_secret) {
     loginRedirect({ error: 'Super/Finance 계정은 2FA 등록이 필요합니다. 관리자에게 문의하세요.' })
   }
