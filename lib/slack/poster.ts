@@ -5,10 +5,41 @@
  * Block Kit 메시지 생성 후 Slack chat.postMessage API 호출.
  * 응답의 ts를 slack_messages.message_ts에 저장 → 추후 ✅ 리액션 매칭.
  *
- * Env:
- *   SLACK_BOT_TOKEN  (xoxb-)
- *   SLACK_TAX_INVOICE_CHANNEL_ID
+ * 토큰·채널 소스 우선순위:
+ *   1. 함수 인자 config (테스트·일회성 오버라이드)
+ *   2. billing.slack_integration (콘솔에서 등록, is_active=true)
+ *   3. 환경 변수 SLACK_BOT_TOKEN / SLACK_TAX_INVOICE_CHANNEL_ID (레거시 폴백)
  */
+
+import { createServiceRoleClient } from '@/lib/supabase/service-role'
+import { readSecret } from '@/lib/vault/secrets'
+
+/** DB(slack_integration) 의 활성 설정 로드. 실패·미설정 시 빈 객체. */
+async function loadSlackConfigFromDb(): Promise<{ botToken?: string; taxInvoiceChannelId?: string }> {
+  try {
+    const sb = createServiceRoleClient() as unknown as {
+      from: (t: string) => {
+        select: (c: string) => {
+          eq: (col: string, v: unknown) => {
+            maybeSingle: () => Promise<{ data: { is_active: boolean; bot_token_vault_id: string | null; tax_invoice_channel_id: string | null } | null; error: unknown }>
+          }
+        }
+      }
+    }
+    const { data } = await sb
+      .from('slack_integration')
+      .select('is_active, bot_token_vault_id, tax_invoice_channel_id')
+      .eq('config_key', 'global')
+      .maybeSingle()
+    if (!data || !data.is_active || !data.bot_token_vault_id) return {}
+    const token = await readSecret(data.bot_token_vault_id)
+    if (!token) return {}
+    return { botToken: token, taxInvoiceChannelId: data.tax_invoice_channel_id ?? undefined }
+  } catch {
+    // DB 미설정 / vault 접근 실패 등은 조용히 env 폴백
+    return {}
+  }
+}
 
 type SBLike = { from: (t: string) => any }
 
@@ -41,8 +72,16 @@ export async function postTaxInvoiceRequest(
   input: PostTaxInvoiceRequestInput,
   config?: { botToken?: string; channelId?: string },
 ): Promise<PostResult> {
-  const botToken = config?.botToken ?? process.env.SLACK_BOT_TOKEN
-  const channelId = config?.channelId ?? process.env.SLACK_TAX_INVOICE_CHANNEL_ID
+  // 우선순위: 함수 인자 > DB(slack_integration) > env. DB 가 활성 상태일 때만 사용.
+  let botToken = config?.botToken
+  let channelId = config?.channelId
+  if (!botToken || !channelId) {
+    const fromDb = await loadSlackConfigFromDb()
+    botToken = botToken ?? fromDb.botToken
+    channelId = channelId ?? fromDb.taxInvoiceChannelId
+  }
+  botToken = botToken ?? process.env.SLACK_BOT_TOKEN
+  channelId = channelId ?? process.env.SLACK_TAX_INVOICE_CHANNEL_ID
   if (!botToken || !channelId) {
     return { ok: false, error: 'SLACK_BOT_TOKEN or SLACK_TAX_INVOICE_CHANNEL_ID missing' }
   }
