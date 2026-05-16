@@ -7,6 +7,7 @@ type NavItem = { href: string; label: string; superOnly?: boolean }
 const NAV_ITEMS: NavItem[] = [
   { href: '/console/home',               label: '홈' },
   { href: '/console/orgs',               label: '고객사' },
+  { href: '/console/members',            label: '전체 멤버', superOnly: true },
   { href: '/console/requests',           label: '요청 큐' },
   { href: '/console/payments',           label: '결제 모니터링' },
   { href: '/console/integrations/slack', label: 'Slack 연동', superOnly: true },

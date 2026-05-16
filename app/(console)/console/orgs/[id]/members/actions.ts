@@ -77,14 +77,19 @@ export async function inviteOrgMember(formData: FormData) {
     redirect('/console/orgs?error=' + encodeURIComponent('Org 를 찾을 수 없습니다.'))
   }
 
+  // 동일 (org, email) 가 이미 있으면 — 단, 삭제함(trash) 에 있는 경우는
+  // 새 row INSERT 대신 그 row 를 복원하여 재초대 (deleted_at 클리어 + invited 로 리셋)
   const { data: dup } = await service
     .from('members')
-    .select('id, status, role')
+    .select('id, status, role, deleted_at, user_id')
     .eq('org_id', orgId)
     .eq('email', email)
     .maybeSingle()
 
-  if (dup) {
+  const isInTrash = dup?.deleted_at != null
+  const restoreExistingId = isInTrash ? dup!.id : null
+
+  if (dup && !isInTrash) {
     const statusLabel =
       dup.status === 'active' ? '이미 활성화된' :
       dup.status === 'invited' ? '이미 초대된' :
@@ -95,7 +100,7 @@ export async function inviteOrgMember(formData: FormData) {
     )
   }
 
-  // owner 는 조직당 1명 원칙 — 기존 active owner 있으면 거부
+  // owner 는 조직당 1명 원칙 — 기존 active owner 있으면 거부 (trash 는 제외)
   if (roleRaw === 'owner') {
     const { data: existingOwner } = await service
       .from('members')
@@ -103,9 +108,10 @@ export async function inviteOrgMember(formData: FormData) {
       .eq('org_id', orgId)
       .eq('role', 'owner')
       .neq('status', 'offboarded')
+      .is('deleted_at', null)
       .maybeSingle()
 
-    if (existingOwner) {
+    if (existingOwner && existingOwner.id !== restoreExistingId) {
       redirect(
         `${backToForm}?error=` +
           encodeURIComponent(`이미 Owner 가 있습니다 (${existingOwner.email}). 추가 Owner 는 Admin 으로 초대 후 권한 이양하세요.`),
@@ -127,20 +133,43 @@ export async function inviteOrgMember(formData: FormData) {
       )
     }
 
-    const { error: insertErr } = await service.from('members').insert({
-      org_id: orgId,
-      email,
-      name,
-      role: roleRaw,
-      status: 'invited',
-      invited_at: new Date().toISOString(),
-    })
+    if (restoreExistingId) {
+      // 삭제함 row 복원 = 이름/역할 갱신 + status='invited' 로 리셋 + deleted_at 클리어
+      const { error: restoreErr } = await service
+        .from('members')
+        .update({
+          name,
+          role: roleRaw,
+          status: 'invited',
+          invited_at: new Date().toISOString(),
+          deleted_at: null,
+          deleted_by_admin_id: null,
+          user_id: null,
+        })
+        .eq('id', restoreExistingId)
 
-    if (insertErr) {
-      redirect(
-        `${backToForm}?error=` +
-          encodeURIComponent('멤버 레코드 생성 실패: ' + insertErr.message),
-      )
+      if (restoreErr) {
+        redirect(
+          `${backToForm}?error=` +
+            encodeURIComponent('삭제함 복원 실패: ' + restoreErr.message),
+        )
+      }
+    } else {
+      const { error: insertErr } = await service.from('members').insert({
+        org_id: orgId,
+        email,
+        name,
+        role: roleRaw,
+        status: 'invited',
+        invited_at: new Date().toISOString(),
+      })
+
+      if (insertErr) {
+        redirect(
+          `${backToForm}?error=` +
+            encodeURIComponent('멤버 레코드 생성 실패: ' + insertErr.message),
+        )
+      }
     }
 
     await service.from('audit_logs').insert({
@@ -148,10 +177,17 @@ export async function inviteOrgMember(formData: FormData) {
       actor_type: 'admin',
       actor_id: me.id,
       actor_email: user.email ?? null,
-      action: 'member_invited',
+      action: restoreExistingId ? 'member_restored_via_reinvite' : 'member_invited',
       target_type: 'member',
+      target_id: restoreExistingId,
       visibility: 'both',
-      detail: { email, name, role: roleRaw, invited_by: 'console_super' },
+      detail: {
+        email,
+        name,
+        role: roleRaw,
+        invited_by: 'console_super',
+        restored_from_trash: !!restoreExistingId,
+      },
     })
   } catch (err) {
     if (isRedirectError(err)) throw err
