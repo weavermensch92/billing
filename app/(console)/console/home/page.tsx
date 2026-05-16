@@ -2,15 +2,21 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 
-export default async function ConsoleHomePage() {
+export default async function ConsoleHomePage({
+  searchParams,
+}: {
+  searchParams: { error?: string; ok?: string }
+}) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/console/login')
 
+  // 레이아웃·orgs/new·createOrg 액션과 동일하게 email 기준. (admin_users 스키마에 user_id 컬럼 없음)
   const { data: admin } = await supabase
     .from('admin_users')
     .select('id, role')
-    .eq('user_id', user.id)
+    .eq('email', user.email ?? '')
+    .eq('is_active', true)
     .maybeSingle()
   if (!admin) redirect('/console/login')
 
@@ -25,6 +31,17 @@ export default async function ConsoleHomePage() {
   return (
     <div className="max-w-6xl mx-auto py-8 px-4 space-y-6">
       <h1 className="text-2xl font-semibold">콘솔</h1>
+
+      {searchParams.error && (
+        <div className="border-l-[3px] border-l-red-500 pl-3 py-2 text-sm text-red-700 bg-red-50">
+          {decodeURIComponent(searchParams.error)}
+        </div>
+      )}
+      {searchParams.ok && (
+        <div className="border-l-[3px] border-l-green-500 pl-3 py-2 text-sm text-green-700 bg-green-50">
+          {decodeURIComponent(searchParams.ok)}
+        </div>
+      )}
 
       <div className="grid grid-cols-3 gap-4">
         <ActionCard
