@@ -97,9 +97,14 @@ export default async function OrgDetailPage({
         </div>
         <div className="flex items-center gap-3">
           <StatusBadge status={orgData.status} />
-          <button className="text-sm border border-gray-300 px-3 py-1.5 rounded-lg hover:bg-gray-50">
-            신규 요청 대신 제출
-          </button>
+          {(adminUser?.role === 'super' || adminUser?.role === 'am') && (
+            <Link
+              href={`/console/orgs/${params.id}/requests/new`}
+              className="text-sm border border-gray-300 px-3 py-1.5 rounded-lg hover:bg-gray-50"
+            >
+              신규 요청 대신 제출
+            </Link>
+          )}
         </div>
       </div>
 
