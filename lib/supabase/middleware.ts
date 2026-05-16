@@ -11,18 +11,22 @@ const MOCK_COOKIE = 'dev_mock_user'
 export async function updateSession(request: NextRequest) {
   const path = request.nextUrl.pathname
 
+  // 인증 불필요 콘솔 경로 (로그인 + 비밀번호 재설정)
+  const isPublicConsolePath =
+    path === '/console/login' || path.startsWith('/console/reset-password')
+
   if (MOCK_MODE) {
     const email = request.cookies.get(MOCK_COOKIE)?.value ?? null
     const hasUser = !!email
     const isConsoleScope = email?.endsWith('@gridge.ai') ?? false
 
     // 콘솔 보호
-    if (path.startsWith('/console') && path !== '/console/login' && !hasUser) {
+    if (path.startsWith('/console') && !isPublicConsolePath && !hasUser) {
       const url = request.nextUrl.clone(); url.pathname = '/console/login'
       return NextResponse.redirect(url)
     }
     // 콘솔 로그인 이후 고객 경로 접근 차단 (혼선 방지)
-    if (path.startsWith('/console') && path !== '/console/login' && hasUser && !isConsoleScope) {
+    if (path.startsWith('/console') && !isPublicConsolePath && hasUser && !isConsoleScope) {
       const url = request.nextUrl.clone(); url.pathname = '/home'
       return NextResponse.redirect(url)
     }
@@ -68,7 +72,7 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (path.startsWith('/console') && path !== '/console/login' && !user) {
+  if (path.startsWith('/console') && !isPublicConsolePath && !user) {
     const url = request.nextUrl.clone(); url.pathname = '/console/login'
     return NextResponse.redirect(url)
   }
