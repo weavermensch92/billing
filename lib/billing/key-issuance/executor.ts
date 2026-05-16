@@ -12,13 +12,24 @@
  *
  * 참조:
  *   - key_issuance_events (M-1007)
- *   - api_keys (P1) — Org·account·key_value·provider_key_id
+ *   - api_keys (P1) — Org·account·key_hash·key_prefix·provider_key_id (평문 미저장)
  *   - vendor adapter createApiKey (TODO — adapter 인터페이스 확장)
  */
 
+import crypto from 'node:crypto'
 import { consumeQuota } from './quota'
 import { getVendorAdapter, type VendorName } from '../../vendor-api/index'
 import { getDecryptedToken } from '../../vendor-api/token-broker'
+
+/** 평문 키 → SHA-256 hex. 인증 시 입력 비교만, 역산 불가. */
+function hashKey(plaintext: string): string {
+  return crypto.createHash('sha256').update(plaintext, 'utf8').digest('hex')
+}
+
+/** 노출용 prefix (앞 12자). 평문 자체를 식별자로 노출하면 안 되므로 일부만. */
+function keyPrefix(plaintext: string): string {
+  return plaintext.slice(0, 12)
+}
 
 type SBLike = {
   from: (t: string) => any
@@ -119,6 +130,8 @@ export async function issueKey(supabase: SBLike, input: IssueKeyInput): Promise<
   }
 
   // 3) 그릿지 api_keys INSERT
+  // 보안: 평문은 DB 절대 저장 안 함. SHA-256 hash + 12자 prefix 만 저장.
+  // 평문(keyValueOnce) 은 호출자(server action) 가 응답으로 1회만 노출.
   const { data: keyRow, error: insErr } = (await supabase
     .from('api_keys')
     .insert({
@@ -126,7 +139,8 @@ export async function issueKey(supabase: SBLike, input: IssueKeyInput): Promise<
       account_id: input.accountId,
       provider: input.vendor,
       provider_key_id: providerKeyId,
-      key_value: keyValueOnce, // 보통 hash 저장 권장. 단순화 위해 평문 단일 컬럼 가정.
+      key_hash: hashKey(keyValueOnce),
+      key_prefix: keyPrefix(keyValueOnce),
       label: input.keyLabel ?? null,
       status: 'active',
       issued_by: input.requestedByMemberId,
