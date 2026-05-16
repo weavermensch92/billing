@@ -2,8 +2,14 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
+import { actionErrorMessage, isRedirectError } from '@/lib/errors'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+
+function errorRedirect(path: string, err: unknown): never {
+  console.error('[inviteAdmin]', err)
+  redirect(`${path}?error=${encodeURIComponent(actionErrorMessage(err))}`)
+}
 
 const ALLOWED_ROLES = ['super', 'am', 'finance', 'ops'] as const
 type AdminRole = (typeof ALLOWED_ROLES)[number]
@@ -65,53 +71,60 @@ export async function inviteAdmin(formData: FormData) {
     redirect('/console/admins/new?error=' + encodeURIComponent('이미 등록된 이메일입니다.'))
   }
 
-  // Supabase Auth 초대 (service-role 필요). Mock 모드에서는 즉시 성공 stub.
-  const serviceRole = createServiceRoleClient()
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
-  const inviteRes = await serviceRole.auth.admin.inviteUserByEmail(email, {
-    redirectTo: appUrl ? `${appUrl}/console/login` : undefined,
-    data: { invited_role: roleRaw, invited_name: name },
-  })
-
-  if (inviteRes.error) {
-    redirect(
-      '/console/admins/new?error=' +
-        encodeURIComponent('초대 메일 발송 실패: ' + inviteRes.error.message),
-    )
-  }
-
-  // admin_users INSERT (service-role: RLS bypass)
-  const { data: inserted, error: insertErr } = await serviceRole
-    .from('admin_users')
-    .insert({
-      email,
-      name,
-      role: roleRaw,
-      is_active: true,
-      totp_secret: null,
+  // Supabase Auth 초대 + admin_users INSERT (service-role).
+  // 환경 변수 누락 / 외부 호출 실패 등 모든 예외를 사용자 메시지로 변환.
+  let insertedId: string
+  try {
+    const serviceRole = createServiceRoleClient()
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+    const inviteRes = await serviceRole.auth.admin.inviteUserByEmail(email, {
+      redirectTo: appUrl ? `${appUrl}/console/login` : undefined,
+      data: { invited_role: roleRaw, invited_name: name },
     })
-    .select('id')
-    .single()
 
-  if (insertErr || !inserted) {
-    redirect(
-      '/console/admins/new?error=' +
-        encodeURIComponent('계정 생성 실패: ' + (insertErr?.message ?? 'unknown')),
-    )
+    if (inviteRes.error) {
+      redirect(
+        '/console/admins/new?error=' +
+          encodeURIComponent('초대 메일 발송 실패: ' + inviteRes.error.message),
+      )
+    }
+
+    const { data: inserted, error: insertErr } = await serviceRole
+      .from('admin_users')
+      .insert({
+        email,
+        name,
+        role: roleRaw,
+        is_active: true,
+        totp_secret: null,
+      })
+      .select('id')
+      .single()
+
+    if (insertErr || !inserted) {
+      redirect(
+        '/console/admins/new?error=' +
+          encodeURIComponent('계정 생성 실패: ' + (insertErr?.message ?? 'unknown')),
+      )
+    }
+
+    insertedId = inserted.id
+
+    await serviceRole.from('audit_logs').insert({
+      org_id: null,
+      actor_type: 'admin',
+      actor_id: me.id,
+      actor_email: user.email ?? null,
+      action: 'admin_invited',
+      target_type: 'admin_user',
+      target_id: insertedId,
+      visibility: 'internal_only',
+      detail: { email, name, role: roleRaw },
+    })
+  } catch (err) {
+    if (isRedirectError(err)) throw err
+    errorRedirect('/console/admins/new', err)
   }
-
-  // 감사 로그
-  await serviceRole.from('audit_logs').insert({
-    org_id: null,
-    actor_type: 'admin',
-    actor_id: me.id,
-    actor_email: user.email ?? null,
-    action: 'admin_invited',
-    target_type: 'admin_user',
-    target_id: inserted.id,
-    visibility: 'internal_only',
-    detail: { email, name, role: roleRaw },
-  })
 
   revalidatePath('/console/admins')
   redirect('/console/admins?ok=' + encodeURIComponent(`${email} 초대 발송 완료`))
