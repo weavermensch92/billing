@@ -70,15 +70,23 @@ export default async function ConsoleAiApiPage({
           <p className="text-sm text-gray-500 mt-1">
             Gridge 자체 게이트웨이 (api.gridge.ai) 의 API 상품 카탈로그. 등급·단가·upstream 매핑·rate limit 관리.
             <br />
-            고객별 키 발급은 <span className="text-gray-400">[키 발급 — PR 3 예정]</span>.
+            고객별 키 발급·회전·폐기는 <Link href="/console/ai-api/keys" className="text-brand-600 hover:underline">🔑 키 관리</Link>.
           </p>
         </div>
-        <Link
-          href="/console/ai-api/products/new"
-          className="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg"
-        >
-          + 신규 상품
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/console/ai-api/keys"
+            className="px-3 py-1.5 border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg"
+          >
+            🔑 키 관리
+          </Link>
+          <Link
+            href="/console/ai-api/products/new"
+            className="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg"
+          >
+            + 신규 상품
+          </Link>
+        </div>
       </div>
 
       {searchParams.ok && (
