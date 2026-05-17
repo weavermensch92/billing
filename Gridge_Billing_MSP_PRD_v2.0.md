@@ -495,7 +495,9 @@ v_fx_pnl_monthly 슈퍼어드민 전용 (RLS 차단)
 
 ### 8.7 Gridge Gateway ↔ vendor_workspaces 통합 트랙 (Phase 1.5)
 
-PR #18~22 로 선행 구축된 **Gridge AI Gateway** (`api.gridge.ai` — 그릿지 자체 게이트웨이 + 마진 재청구) 를 §6 벤더 워크스페이스 모델로 흡수하는 작업 패키지. Phase 1 (M-2001~2005) 완료 후 별도 트랙 (M-2050~2055) 으로 진행.
+PR #18~22 로 선행 구축된 **Gridge AI Gateway** (`api.gridge.ai` — 그릿지 자체 게이트웨이 + 마진 재청구) 를 §6 벤더 워크스페이스 모델로 흡수하는 작업 패키지. Phase 1 (M-2001~2005) 완료 후 별도 트랙 (M-2050~2056) 으로 진행.
+
+> **상태 (2026-05-17 기준):** PR #27 ~ #31 머지로 **마이그레이션 + 코드 + 운영 UI 모두 완료.** 잔여: 운영자가 콘솔에서 anthropic admin token 등록 → env fallback 제거 (별도 PR).
 
 #### 8.7.1 통합 이유
 
@@ -506,7 +508,7 @@ PR #18~22 로 선행 구축된 **Gridge AI Gateway** (`api.gridge.ai` — 그릿
 | 사용량 집계 = key 단위 | 사용량 집계 = **워크스페이스 단위** (Q1 청구 단위와 동일) |
 | 청구서 라인 아이템이 게이트웨이/벤더 직접 결제 별도 처리 | 동일한 vendor_invoices 흐름으로 통합 |
 
-#### 8.7.2 마이그레이션 단위 (M-2050~2055)
+#### 8.7.2 마이그레이션 단위 (M-2050~2056)
 
 **M-2050 — `services.category` 확장 + 게이트웨이 row**
 
@@ -620,12 +622,13 @@ ALTER TABLE billing.orgs
 CREATE INDEX IF NOT EXISTS idx_orgs_internal
   ON billing.orgs(is_internal) WHERE is_internal = TRUE;
 
+-- v2_simplify_billing_plan 이후 plan CHECK = 'prepaid_v2' 단일값이므로
+-- plan/infra_mode/billing_mode/status 는 DEFAULT 위임 (PR #27 hotfix 반영).
 INSERT INTO billing.orgs
-  (id, name, business_reg_no, plan, infra_mode, billing_mode,
-   status, credit_limit_krw, is_internal)
+  (id, name, business_reg_no, credit_limit_krw, is_internal)
 VALUES
   ('00000000-0000-0000-0000-000000000001', 'Gridge (internal)',
-   'gridge-self-internal', 'monthly', 'A', 'D', 'active', 0, TRUE)
+   'gridge-self-internal', 0, TRUE)
 ON CONFLICT (id) DO NOTHING;
 
 -- RLS 보강: 일반 고객 SELECT 시 internal org 제외
@@ -635,6 +638,21 @@ CREATE POLICY orgs_exclude_internal_from_customer
 ```
 
 이 org 의 vendor_workspaces 가 upstream admin token 의 owner. `business_reg_no='gridge-self-internal'` 은 임시값 — 운영 단계에서 실제 그릿지 법인 등록번호로 교체.
+
+**M-2056 — `gridge_api_usage_events.upstream_admin_token_id` (호출 추적)**
+
+```sql
+ALTER TABLE billing.gridge_api_usage_events
+  ADD COLUMN upstream_admin_token_id uuid REFERENCES billing.vendor_admin_tokens(id);
+
+CREATE INDEX idx_gridge_usage_events_upstream_token
+  ON billing.gridge_api_usage_events (upstream_admin_token_id, created_at DESC)
+  WHERE upstream_admin_token_id IS NOT NULL;
+```
+
+게이트웨이 호출 1건이 어떤 upstream admin token 으로 실행됐는지 추적.
+회계 분리 (PB-009) + Anthropic 패스스루 회계 (PB-007) 의 정확도 보강.
+nullable — env `ANTHROPIC_API_KEY` fallback 사용 시 NULL. 운영 셋업 완료 후 NOT NULL 승격 검토.
 
 #### 8.7.3 코드 변경 영역
 
@@ -671,24 +689,35 @@ await supabase.from('gridge_api_usage_events').insert({
 
 월말 invoice 생성 시 게이트웨이 사용량을 워크스페이스 단위로 묶어 `vendor_invoices` 와 동일한 구조로 처리. `customer_invoices` 라인 아이템에 워크스페이스별 1줄로 통합.
 
-#### 8.7.4 의존성 / 순서
+#### 8.7.4 의존성 / 순서 (실제 머지 결과)
 
 ```
 Phase 1 완료 (M-2001~2005)
    ↓
-M-2050 (services.kind, gateway row)
+M-2050 (services.category='gridge_gateway' + gateway row)  ┐
+M-2051 (ensure_gateway_workspace 함수)                       ├─ PR #27
+M-2055 (gridge_self_org seed + RLS)                         ┘
    ↓
-M-2051 (ensure_gateway_workspace 함수)
+M-2052 (gridge_api_keys.workspace_id NOT NULL + 백필)        ┐
+M-2053 (usage_events.workspace_id NOT NULL + 백필)            ├─ PR #28
+M-2054 (vendor_admin_tokens.workspace_id nullable)           ┘
    ↓
-M-2055 (gridge_self_org seed) ──┐
-   ↓                            │ 병렬 가능
-M-2052 (gridge_api_keys.workspace_id) ──┐
-M-2054 (vendor_admin_tokens.workspace_id) ──┤
-   ↓                                       │
-M-2053 (usage_events.workspace_id) ←───────┘
+[게이트웨이 라우트 재배선 + 키 발급 workspace_id]           ─ PR #29
    ↓
-[코드 PR — 게이트웨이 라우트 재배선]
+M-2056 (usage_events.upstream_admin_token_id nullable)       ─ PR #30
+   ↓
+[운영 UI — /console/ai-api/gateway-tokens]                  ─ PR #31
 ```
+
+PR 매핑 요약:
+
+| PR | 범위 |
+|---|---|
+| #27 | M-2050 / M-2051 / M-2055 — services 확장 + 함수 + seed |
+| #28 | M-2052 / M-2053 / M-2054 — workspace_id 컬럼 + 백필 |
+| #29 | 라우트 재배선 + `resolveUpstreamToken` + 키 발급 workspace_id |
+| #30 | M-2056 — `upstream_admin_token_id` INSERT |
+| #31 | 콘솔 운영 UI — Gateway upstream 토큰 등록 / 회전 / 폐기 |
 
 #### 8.7.5 외부 영향
 
@@ -718,6 +747,30 @@ M-2053 (usage_events.workspace_id) ←───────┘
 - 첫 번째 워크스페이스 = **그릿지가 고객에게 청구** (마진 포함, customer_invoices)
 - 두 번째 워크스페이스 = **벤더가 그릿지에게 청구** (vendor_invoices)
 - 둘의 차액 = 게이트웨이 마진
+
+#### 8.7.7 운영 콘솔 UI (PR #31)
+
+경로: `/console/ai-api/gateway-tokens` (Super 전용)
+
+- **등록 폼** — vendor / vendor_workspace_id / token_label / token 평문
+  - 평문은 1회 입력 (`type=password`, `autoComplete=off`)
+  - 저장 시 AES-256-GCM 암호화 (`lib/vendor-api/token-broker.encryptToken`)
+  - 기존 `(vendor, vendor_workspace_id)` active 토큰이 있으면 **자동 회전** (`rotate_vendor_token` RPC)
+- **목록** — vendor / workspace / label / prefix (마스킹) / status / use_count / last_used
+- **폐기** — 사유 필수, status `active` → `revoked` 전이
+- 등록 org = `GRIDGE_SELF_ORG_ID` 고정 (그릿지 내부 운영 org)
+- audit_logs `visibility='internal_only'` (고객 비노출)
+
+이전에는 SQL 직접 INSERT 가 필요했으나, 이 UI 로 운영자가 콘솔에서 직접 관리. env fallback 제거의 전제.
+
+#### 8.7.8 잔여 작업
+
+| 작업 | 선결 조건 | 예상 PR |
+|---|---|---|
+| `vendor_admin_tokens.workspace_id` UI 매핑 | `/console/ai-api/gateway-tokens` 폼에 workspace 드롭다운 | 별도 |
+| `env ANTHROPIC_API_KEY` fallback 제거 | 콘솔에서 anthropic active 토큰 등록 완료 | 별도 |
+| `usage_events.upstream_admin_token_id` NOT NULL 승격 | 모든 호출이 token 기반이 된 후 (env fallback 제거 후) | 별도 |
+| `vendor_admin_tokens.workspace_id` NOT NULL 승격 | 운영 도구로 기존 row 수동 매핑 완료 후 | 별도 |
 
 ---
 
