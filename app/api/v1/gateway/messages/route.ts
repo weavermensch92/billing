@@ -24,6 +24,7 @@
 
 import { NextResponse } from 'next/server'
 import { authenticateGridgeKey, touchKeyUsage } from '@/lib/gateway/auth'
+import { resolveUpstreamToken } from '@/lib/billing/gateway/upstream-token'
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
 
 type AnthropicUsage = { input_tokens?: number; output_tokens?: number }
@@ -96,10 +97,31 @@ export async function POST(req: Request) {
   // 모델은 product 의 upstream_model 로 고정 — 고객이 임의 변경 못 함
   body.model = product.upstream_model
 
-  // 4) Upstream API 호출 (Anthropic)
-  const upstreamKey = process.env.ANTHROPIC_API_KEY
+  // 4) Upstream admin token 해결 (PR #29 M-2054)
+  //    vendor_admin_tokens 에서 active token 1건 선택. 매칭 실패 시 env fallback
+  //    (점진적 도입 — env fallback 은 PR #30 에서 제거 예정).
+  let upstreamTokenId: string | null = null
+  let upstreamKey: string | null = null
+  try {
+    const resolved = await resolveUpstreamToken(service, key.workspace_id, 'anthropic')
+    if (resolved) {
+      upstreamTokenId = resolved.tokenId
+      upstreamKey = resolved.plaintext
+    }
+  } catch (err) {
+    console.error('[gateway resolve upstream token]', err)
+  }
+
   if (!upstreamKey) {
-    return errorResponse(500, 'upstream_config_missing', 'Upstream 키 미설정 (ANTHROPIC_API_KEY)')
+    // Fallback: vendor_admin_tokens 매칭 실패 시 env 사용 (점진적)
+    upstreamKey = process.env.ANTHROPIC_API_KEY ?? null
+  }
+  if (!upstreamKey) {
+    return errorResponse(
+      500,
+      'upstream_config_missing',
+      'Upstream 키 미설정 (vendor_admin_tokens active 토큰 없음 + ANTHROPIC_API_KEY 미설정)',
+    )
   }
 
   let upstreamRes: Response
@@ -164,6 +186,7 @@ export async function POST(req: Request) {
     await service.from('gridge_api_usage_events').insert({
       key_id: key.id,
       org_id: key.org_id,
+      workspace_id: key.workspace_id, // M-2053 (PR #28)
       product_id: product.id,
       request_id: (upstreamJson.id as string) ?? null,
       model_used: product.upstream_model,
@@ -178,8 +201,10 @@ export async function POST(req: Request) {
       upstream_vendor: product.upstream_vendor,
       upstream_request_id: (upstreamJson.id as string) ?? null,
       upstream_cost_usd: null, // PR #5 v2 에서 환율 계산 추가
+      // upstream_admin_token_id 는 usage_events 컬럼 추가 후 다음 PR 에서 박는다.
       wallet_ledger_id: walletLedgerId,
     })
+    void upstreamTokenId // PR #30 에서 사용 — 컬럼 추가 후 INSERT 에 박는다.
   } catch (err) {
     console.error('[gateway usage event]', err)
   }

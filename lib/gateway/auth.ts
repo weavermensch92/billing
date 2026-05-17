@@ -5,6 +5,7 @@ export type AuthenticatedKey = {
   id: string
   org_id: string
   product_id: string
+  workspace_id: string
   key_prefix: string
   status: 'active' | 'rotating'
   monthly_spend_cap_krw: number | null
@@ -50,7 +51,7 @@ export async function authenticateGridgeKey(req: Request): Promise<AuthResult> {
   const service = createServiceRoleClient()
   const { data: candidates } = await service
     .from('gridge_api_keys')
-    .select('id, org_id, product_id, key_prefix, key_hash, status, monthly_spend_cap_krw')
+    .select('id, org_id, product_id, workspace_id, key_prefix, key_hash, status, monthly_spend_cap_krw')
     .eq('key_prefix', prefix)
     .in('status', ['active', 'rotating'])
 
@@ -58,6 +59,7 @@ export async function authenticateGridgeKey(req: Request): Promise<AuthResult> {
     id: string
     org_id: string
     product_id: string
+    workspace_id: string
     key_prefix: string
     key_hash: string
     status: 'active' | 'rotating'
@@ -74,6 +76,7 @@ export async function authenticateGridgeKey(req: Request): Promise<AuthResult> {
           id: c.id,
           org_id: c.org_id,
           product_id: c.product_id,
+          workspace_id: c.workspace_id,
           key_prefix: c.key_prefix,
           status: c.status,
           monthly_spend_cap_krw: c.monthly_spend_cap_krw,

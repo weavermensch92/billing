@@ -8,10 +8,7 @@
  */
 
 type SBLike = {
-  rpc: (
-    name: string,
-    params?: Record<string, unknown>,
-  ) => Promise<{ data: unknown; error: unknown }>
+  rpc: (name: string, params?: Record<string, unknown>) => any
 }
 
 /**
