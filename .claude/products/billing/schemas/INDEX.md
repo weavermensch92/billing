@@ -211,7 +211,7 @@
 | `reimbursement_policies` | 환급 정책 | Phase 3 (M-2012) | §8.8 | 미구현 |
 
 후속 마이그레이션이 기존 테이블에 컬럼 추가:
-- M-2003: `accounts.kind` / `workspace_id` / `payer_type`
+- M-2003: `accounts.kind` / `workspace_id` / `payer_type` — `20260517000002_q1_accounts_workspace_kind.sql` ✅
 - M-2004: `virtual_cards.workspace_id` / `subscription_id` / `card_kind`
 - M-2005: `vendor_invoices.workspace_id` (UUID FK) / `source_type`
 - M-2008: `services.expected_merchant_pattern` / `default_billing_period` / `supports_gridge_card` / `supports_member_reimbursement`
