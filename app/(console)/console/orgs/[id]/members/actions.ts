@@ -123,15 +123,23 @@ export async function inviteOrgMember(formData: FormData) {
     if (inviteRes.error) {
       redirect(
         `${backToForm}?error=` +
-          encodeURIComponent('초대 메일 발송 실패: ' + inviteRes.error.message),
+          encodeURIComponent(
+            '초대 메일 발송 실패: ' + inviteRes.error.message +
+            ' (Supabase Dashboard → Auth → SMTP 설정 확인)',
+          ),
       )
     }
+
+    // invite 응답의 user.id 를 members.user_id 에 명시 — handle_new_auth_user
+    // 트리거 race 회피 + 차후 로그인 시 user_id 기반 권한 검증 보장.
+    const invitedUserId = inviteRes.data?.user?.id ?? null
 
     const { error: insertErr } = await service.from('members').insert({
       org_id: orgId,
       email,
       name,
       role: roleRaw,
+      user_id: invitedUserId,
       status: 'invited',
       invited_at: new Date().toISOString(),
     })
@@ -151,7 +159,7 @@ export async function inviteOrgMember(formData: FormData) {
       action: 'member_invited',
       target_type: 'member',
       visibility: 'both',
-      detail: { email, name, role: roleRaw, invited_by: 'console_super' },
+      detail: { email, name, role: roleRaw, invited_by: 'console_super', user_id: invitedUserId },
     })
   } catch (err) {
     if (isRedirectError(err)) throw err
@@ -208,10 +216,22 @@ export async function resendInvite(formData: FormData) {
     })
 
     if (inviteRes.error) {
-      redirect(`${backTo}&error=` + encodeURIComponent('재발송 실패: ' + inviteRes.error.message))
+      redirect(
+        `${backTo}&error=` +
+          encodeURIComponent(
+            '재발송 실패: ' + inviteRes.error.message +
+            ' (Supabase Dashboard → Auth → SMTP 설정 확인)',
+          ),
+      )
     }
 
-    await service.from('members').update({ invited_at: new Date().toISOString() }).eq('id', memberId)
+    // invite 응답의 user.id 로 기존 member.user_id 도 보정 (NULL 인 경우)
+    const invitedUserId = inviteRes.data?.user?.id ?? null
+    const memberUpdate: Record<string, unknown> = { invited_at: new Date().toISOString() }
+    if (invitedUserId && !member.user_id) {
+      memberUpdate.user_id = invitedUserId
+    }
+    await service.from('members').update(memberUpdate).eq('id', memberId)
 
     await service.from('audit_logs').insert({
       org_id: orgId,
@@ -222,7 +242,7 @@ export async function resendInvite(formData: FormData) {
       target_type: 'member',
       target_id: memberId,
       visibility: 'both',
-      detail: { email: member.email, role: member.role },
+      detail: { email: member.email, role: member.role, user_id: invitedUserId },
     })
   } catch (err) {
     if (isRedirectError(err)) throw err

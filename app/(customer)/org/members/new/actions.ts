@@ -56,17 +56,24 @@ export async function inviteMember(formData: FormData) {
   if (inviteRes.error) {
     redirect(
       '/org/members/new?error=' +
-        encodeURIComponent('초대 메일 발송 실패: ' + inviteRes.error.message),
+        encodeURIComponent(
+          '초대 메일 발송 실패: ' + inviteRes.error.message +
+          ' (운영자에게 문의 — Auth SMTP 설정 확인 필요)',
+        ),
     )
   }
 
-  // members 레코드 생성 (service_role 로 INSERT — handle_new_auth_user 트리거가
-  // 가입 완료 시 user_id 채움)
+  // invite 응답의 user.id 를 members.user_id 에 명시 — handle_new_auth_user
+  // 트리거 race 회피 + 차후 로그인 시 user_id 기반 권한 검증 보장.
+  const invitedUserId = inviteRes.data?.user?.id ?? null
+
+  // members 레코드 생성 (service_role 로 INSERT)
   const { error } = await service.from('members').insert({
     org_id: currentMember.org_id,
     email,
     name,
     role,
+    user_id: invitedUserId,
     status: 'invited',
     invited_at: new Date().toISOString(),
   })
