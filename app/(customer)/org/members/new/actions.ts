@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
+import { notifyMemberInvited } from '@/lib/email/events'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 
@@ -95,6 +96,20 @@ export async function inviteMember(formData: FormData) {
     visibility: 'both',
     detail: { email, name, role },
   })
+
+  // 메일 디스패치 — 초대 본인은 Auth 매직링크로 별도 수신.
+  // 본 알림은 org 의 다른 owner/admin 에게 "초대됨" 안내. best-effort.
+  try {
+    await notifyMemberInvited(service, {
+      orgId: currentMember.org_id,
+      invitedEmail: email,
+      invitedName: name,
+      invitedRole: role,
+      invitedByEmail: user.email ?? null,
+    })
+  } catch (err) {
+    console.error('[inviteMember notifyMemberInvited]', err)
+  }
 
   revalidatePath('/org/members')
   redirect('/org/members?invited=1')

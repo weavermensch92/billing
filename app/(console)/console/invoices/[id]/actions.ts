@@ -1,6 +1,8 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createServiceRoleClient } from '@/lib/supabase/service-role'
+import { notifyInvoiceIssued } from '@/lib/email/events'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 
@@ -30,7 +32,7 @@ export async function issueInvoice(formData: FormData) {
     .from('invoices').update({ status: 'issued' })
     .eq('id', invoice_id)
     .eq('status', 'draft')
-    .select('org_id, total_due_krw, requires_super_approval, super_approved_at')
+    .select('org_id, billing_month, total_due_krw, requires_super_approval, super_approved_at')
     .single()
 
   if (error || !invoice) {
@@ -52,6 +54,19 @@ export async function issueInvoice(formData: FormData) {
     visibility: 'both',
     detail: { total_due_krw: invoice.total_due_krw },
   })
+
+  // 메일 디스패치 (best-effort, 발행 흐름에 영향 X)
+  try {
+    const service = createServiceRoleClient()
+    await notifyInvoiceIssued(service, {
+      invoiceId: invoice_id,
+      orgId: invoice.org_id,
+      billingMonth: invoice.billing_month,
+      totalDueKrw: invoice.total_due_krw,
+    })
+  } catch (err) {
+    console.error('[issueInvoice notifyInvoiceIssued]', err)
+  }
 
   revalidatePath(`/console/invoices/${invoice_id}`)
   revalidatePath('/console/invoices')
