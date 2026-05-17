@@ -75,10 +75,16 @@ export default async function ConsoleAiApiPage({
         </div>
         <div className="flex items-center gap-2">
           <Link
+            href="/console/ai-api/vendor-keys"
+            className="px-3 py-1.5 border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg"
+          >
+            🗝 벤더 키 대행
+          </Link>
+          <Link
             href="/console/ai-api/keys"
             className="px-3 py-1.5 border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg"
           >
-            🔑 키 관리
+            🔑 Gridge 키
           </Link>
           <Link
             href="/console/ai-api/products/new"
