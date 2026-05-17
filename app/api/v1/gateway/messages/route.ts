@@ -100,17 +100,30 @@ export async function POST(req: Request) {
 
   // 4) Upstream admin token 해결 (M-2054 / PR #29 + 이슈 #1 결정 (a))
   //    우선순위:
-  //      1. 상품에 명시 지정된 토큰 (product.upstream_admin_token_id) — active 일 때만 사용
+  //      1. 상품에 명시 지정된 토큰 (product.upstream_admin_token_id) — active 이고 vendor 일치할 때만 사용
   //      2. vendor 기반 자동 선택 (vendor_admin_tokens 의 최신 active 토큰)
   //      3. 둘 다 없으면 503 (env fallback 제거 — 운영 셋업 필수)
   let upstreamTokenId: string | null = null
   let upstreamKey: string | null = null
+  let vendorMismatchError: string | null = null
   try {
     if (product.upstream_admin_token_id) {
       const resolvedById = await resolveUpstreamTokenById(service, product.upstream_admin_token_id)
       if (resolvedById) {
-        upstreamTokenId = resolvedById.tokenId
-        upstreamKey = resolvedById.plaintext
+        // 런타임 vendor 일치 검증 — 콘솔 가드 (PR #35) 우회 / SQL 직접 수정 등
+        // 어떤 경로로든 mismatch 가 발생하면 잘못된 vendor 키 사용을 차단.
+        if (resolvedById.vendor !== product.upstream_vendor) {
+          console.error('[gateway vendor mismatch]', {
+            productId: product.id,
+            productVendor: product.upstream_vendor,
+            tokenId: resolvedById.tokenId,
+            tokenVendor: resolvedById.vendor,
+          })
+          vendorMismatchError = `상품 vendor=${product.upstream_vendor} 와 지정 토큰 vendor=${resolvedById.vendor} 불일치. 운영자에게 문의하세요.`
+        } else {
+          upstreamTokenId = resolvedById.tokenId
+          upstreamKey = resolvedById.plaintext
+        }
       }
       // 명시 지정 토큰이 inactive 면 fallback 안 함 — 운영자 의도 존중.
     } else {
@@ -127,6 +140,10 @@ export async function POST(req: Request) {
       'upstream_token_error',
       'Upstream admin token 조회 실패. 운영자에게 문의하세요.',
     )
+  }
+
+  if (vendorMismatchError) {
+    return errorResponse(502, 'upstream_token_vendor_mismatch', vendorMismatchError)
   }
 
   if (!upstreamKey) {
