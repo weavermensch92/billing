@@ -188,11 +188,98 @@ export default async function NewProductPage({
         </div>
 
         <div className="border-t border-gray-200 pt-5">
-          <h3 className="text-sm font-medium text-gray-900 mb-3">단가 (KRW per 1,000 tokens)</h3>
+          <h3 className="text-sm font-medium text-gray-900 mb-3">가격 정책 (M-2057)</h3>
+
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 mb-4 text-xs text-gray-700">
+            <strong>디폴트:</strong> 그릿지가 고객에게 제공하는 순수 벤더 API 는
+            <span className="text-brand-700 font-medium"> 마진 0% (pass-through) </span>
+            가 기본. markup 컬럼 비워두면 디폴트 적용.
+          </div>
+
+          <h4 className="text-xs font-semibold text-gray-700 mb-2">벤더 공식 단가 (USD per 1k tokens) — 외부 가격 기준</h4>
+          <div className="grid grid-cols-3 gap-4 mb-4">
+            <div>
+              <label htmlFor="upstream_input_price_per_1k_usd" className="block text-xs font-medium text-gray-600 mb-1">
+                Upstream Input (USD)
+              </label>
+              <input
+                id="upstream_input_price_per_1k_usd"
+                name="upstream_input_price_per_1k_usd"
+                type="number"
+                step="0.000001"
+                min="0"
+                defaultValue="0"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-right font-mono focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+            </div>
+            <div>
+              <label htmlFor="upstream_output_price_per_1k_usd" className="block text-xs font-medium text-gray-600 mb-1">
+                Upstream Output (USD)
+              </label>
+              <input
+                id="upstream_output_price_per_1k_usd"
+                name="upstream_output_price_per_1k_usd"
+                type="number"
+                step="0.000001"
+                min="0"
+                defaultValue="0"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-right font-mono focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+            </div>
+            <div>
+              <label htmlFor="fx_rate_krw_per_usd" className="block text-xs font-medium text-gray-600 mb-1">
+                FX 환율 (KRW/USD)
+              </label>
+              <input
+                id="fx_rate_krw_per_usd"
+                name="fx_rate_krw_per_usd"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="비워두면 NULL"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-right font-mono focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+            </div>
+          </div>
+
+          <h4 className="text-xs font-semibold text-gray-700 mb-2">마진 (디폴트 0)</h4>
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label htmlFor="markup_pct" className="block text-xs font-medium text-gray-600 mb-1">
+                마진율 (%)
+              </label>
+              <input
+                id="markup_pct"
+                name="markup_pct"
+                type="number"
+                step="0.01"
+                min="0"
+                max="1000"
+                defaultValue="0"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-right font-mono focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+            </div>
+            <div>
+              <label htmlFor="markup_fixed_krw" className="block text-xs font-medium text-gray-600 mb-1">
+                고정 마진 (KRW / 호출)
+              </label>
+              <input
+                id="markup_fixed_krw"
+                name="markup_fixed_krw"
+                type="number"
+                step="1"
+                min="0"
+                defaultValue="0"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-right font-mono focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+            </div>
+          </div>
+
+          <h4 className="text-xs font-semibold text-gray-700 mb-2">최종 청구가 (KRW per 1k tokens) — 호출 시 적용</h4>
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label htmlFor="input_price_per_1k_krw" className="block text-sm font-medium text-gray-700 mb-1">
-                Input <span className="text-red-500">*</span>
+              <label htmlFor="input_price_per_1k_krw" className="block text-xs font-medium text-gray-600 mb-1">
+                Input KRW <span className="text-red-500">*</span>
               </label>
               <input
                 id="input_price_per_1k_krw"
@@ -206,8 +293,8 @@ export default async function NewProductPage({
               />
             </div>
             <div>
-              <label htmlFor="output_price_per_1k_krw" className="block text-sm font-medium text-gray-700 mb-1">
-                Output <span className="text-red-500">*</span>
+              <label htmlFor="output_price_per_1k_krw" className="block text-xs font-medium text-gray-600 mb-1">
+                Output KRW <span className="text-red-500">*</span>
               </label>
               <input
                 id="output_price_per_1k_krw"
@@ -221,7 +308,7 @@ export default async function NewProductPage({
               />
             </div>
             <div>
-              <label htmlFor="min_charge_krw" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="min_charge_krw" className="block text-xs font-medium text-gray-600 mb-1">
                 최소 과금 (₩)
               </label>
               <input
@@ -235,6 +322,9 @@ export default async function NewProductPage({
               />
             </div>
           </div>
+          <p className="mt-2 text-xs text-gray-500">
+            현재 manual 모드 — 최종 청구가는 직접 입력. vendor_fetch 모드 자동 계산은 후속 PR.
+          </p>
         </div>
 
         <div className="border-t border-gray-200 pt-5">
