@@ -10,7 +10,10 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { encryptToken } from '@/lib/vendor-api/token-broker'
-import { resolveUpstreamToken } from '@/lib/billing/gateway/upstream-token'
+import {
+  resolveUpstreamToken,
+  resolveUpstreamTokenById,
+} from '@/lib/billing/gateway/upstream-token'
 
 beforeEach(() => {
   // AES-256 키 (32 bytes base64) — 테스트 전용
@@ -117,5 +120,48 @@ describe('resolveUpstreamToken', () => {
     const result = await resolveUpstreamToken(supa as any, 'ws', 'openai')
     expect(result).toBeNull()
     expect(supa.builder.eq).toHaveBeenCalledWith('vendor', 'openai')
+  })
+})
+
+describe('resolveUpstreamTokenById (이슈 #1 결정 (a) — 상품별 우선)', () => {
+  it('returns decrypted token when active token matches id', async () => {
+    const encrypted = encryptToken('sk-ant-prod')
+    const supa = makeSupabaseMock({
+      id: 'tok-prod-1',
+      token_encrypted: encrypted,
+      vendor: 'anthropic',
+      vendor_workspace_id: 'gridge-prod',
+    })
+
+    const result = await resolveUpstreamTokenById(supa as any, 'tok-prod-1')
+
+    expect(result).not.toBeNull()
+    expect(result?.tokenId).toBe('tok-prod-1')
+    expect(result?.plaintext).toBe('sk-ant-prod')
+    expect(supa.from).toHaveBeenCalledWith('vendor_admin_tokens')
+    expect(supa.builder.eq).toHaveBeenCalledWith('id', 'tok-prod-1')
+    expect(supa.builder.eq).toHaveBeenCalledWith('status', 'active')
+  })
+
+  it('returns null when token id has non-active status', async () => {
+    const supa = makeSupabaseMock(null) // rotated / revoked / expired 모두 null
+    const result = await resolveUpstreamTokenById(supa as any, 'tok-rotated')
+    expect(result).toBeNull()
+  })
+
+  it('calls mark_token_used RPC', async () => {
+    const encrypted = encryptToken('sk-x')
+    const supa = makeSupabaseMock({
+      id: 'tok-abc',
+      token_encrypted: encrypted,
+      vendor: 'anthropic',
+      vendor_workspace_id: 'w',
+    })
+    await resolveUpstreamTokenById(supa as any, 'tok-abc')
+
+    expect(supa.rpc).toHaveBeenCalledWith('mark_token_used', {
+      p_token_id: 'tok-abc',
+      p_used_for: 'gridge_gateway',
+    })
   })
 })

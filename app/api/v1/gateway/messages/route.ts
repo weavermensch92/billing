@@ -24,7 +24,7 @@
 
 import { NextResponse } from 'next/server'
 import { authenticateGridgeKey, touchKeyUsage } from '@/lib/gateway/auth'
-import { resolveUpstreamToken } from '@/lib/billing/gateway/upstream-token'
+import { resolveUpstreamToken, resolveUpstreamTokenById } from '@/lib/billing/gateway/upstream-token'
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
 
 type AnthropicUsage = { input_tokens?: number; output_tokens?: number }
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
   const service = createServiceRoleClient()
   const { data: productRaw } = await service
     .from('gridge_api_products')
-    .select('id, code, is_active, upstream_vendor, upstream_model, input_price_per_1k_krw, output_price_per_1k_krw, min_charge_krw')
+    .select('id, code, is_active, upstream_vendor, upstream_model, upstream_admin_token_id, input_price_per_1k_krw, output_price_per_1k_krw, min_charge_krw')
     .eq('id', key.product_id)
     .maybeSingle()
 
@@ -67,6 +67,7 @@ export async function POST(req: Request) {
     is_active: boolean
     upstream_vendor: string
     upstream_model: string
+    upstream_admin_token_id: string | null
     input_price_per_1k_krw: number
     output_price_per_1k_krw: number
     min_charge_krw: number
@@ -97,16 +98,27 @@ export async function POST(req: Request) {
   // 모델은 product 의 upstream_model 로 고정 — 고객이 임의 변경 못 함
   body.model = product.upstream_model
 
-  // 4) Upstream admin token 해결 (M-2054 / PR #29)
-  //    vendor_admin_tokens 에서 active anthropic 토큰 1건 선택.
-  //    env fallback 제거 — 운영 셋업 (콘솔 /console/ai-api/gateway-tokens) 필수.
+  // 4) Upstream admin token 해결 (M-2054 / PR #29 + 이슈 #1 결정 (a))
+  //    우선순위:
+  //      1. 상품에 명시 지정된 토큰 (product.upstream_admin_token_id) — active 일 때만 사용
+  //      2. vendor 기반 자동 선택 (vendor_admin_tokens 의 최신 active 토큰)
+  //      3. 둘 다 없으면 503 (env fallback 제거 — 운영 셋업 필수)
   let upstreamTokenId: string | null = null
   let upstreamKey: string | null = null
   try {
-    const resolved = await resolveUpstreamToken(service, key.workspace_id, 'anthropic')
-    if (resolved) {
-      upstreamTokenId = resolved.tokenId
-      upstreamKey = resolved.plaintext
+    if (product.upstream_admin_token_id) {
+      const resolvedById = await resolveUpstreamTokenById(service, product.upstream_admin_token_id)
+      if (resolvedById) {
+        upstreamTokenId = resolvedById.tokenId
+        upstreamKey = resolvedById.plaintext
+      }
+      // 명시 지정 토큰이 inactive 면 fallback 안 함 — 운영자 의도 존중.
+    } else {
+      const resolved = await resolveUpstreamToken(service, key.workspace_id, product.upstream_vendor)
+      if (resolved) {
+        upstreamTokenId = resolved.tokenId
+        upstreamKey = resolved.plaintext
+      }
     }
   } catch (err) {
     console.error('[gateway resolve upstream token]', err)
@@ -118,11 +130,10 @@ export async function POST(req: Request) {
   }
 
   if (!upstreamKey) {
-    return errorResponse(
-      503,
-      'upstream_token_unconfigured',
-      'Upstream admin token 이 등록되지 않았습니다. 콘솔에서 anthropic active 토큰 등록 후 재시도하세요. (/console/ai-api/gateway-tokens)',
-    )
+    const detail = product.upstream_admin_token_id
+      ? `상품에 지정된 admin token (id=${product.upstream_admin_token_id}) 이 inactive 입니다. 콘솔에서 토큰을 재등록하거나 상품의 지정을 해제하세요.`
+      : `Upstream admin token 이 등록되지 않았습니다. 콘솔에서 ${product.upstream_vendor} active 토큰 등록 후 재시도하세요. (/console/ai-api/gateway-tokens)`
+    return errorResponse(503, 'upstream_token_unconfigured', detail)
   }
 
   let upstreamRes: Response

@@ -85,3 +85,53 @@ export async function resolveUpstreamToken(
     vendorWorkspaceId: data.vendor_workspace_id,
   }
 }
+
+/**
+ * 특정 vendor_admin_tokens.id 로 upstream 토큰 해결.
+ *
+ * 사용 케이스: 게이트웨이 상품 (`gridge_api_products.upstream_admin_token_id`)
+ * 이 운영자에 의해 명시 지정된 경우 — 상품별 다중 토큰 라우팅 지원 (이슈 #1 결정 (a)).
+ *
+ * - status='active' 가 아니면 null 반환 (rotated/revoked/expired 토큰은 사용 금지)
+ * - vendor 매칭은 호출자가 책임 (상품의 upstream_vendor 와 일치해야 함)
+ *
+ * @returns 복호화된 평문 + 메타. 없거나 inactive 면 null.
+ */
+export async function resolveUpstreamTokenById(
+  supabase: SBLike,
+  tokenId: string,
+): Promise<ResolvedUpstreamToken | null> {
+  const { data } = (await supabase
+    .from('vendor_admin_tokens')
+    .select('id, token_encrypted, vendor, vendor_workspace_id, status')
+    .eq('id', tokenId)
+    .eq('status', 'active')
+    .maybeSingle()) as {
+    data: {
+      id: string
+      token_encrypted: Buffer | Uint8Array
+      vendor: string
+      vendor_workspace_id: string
+      status: string
+    } | null
+  }
+
+  if (!data) return null
+
+  const blob = Buffer.isBuffer(data.token_encrypted)
+    ? data.token_encrypted
+    : Buffer.from(data.token_encrypted as Uint8Array)
+  const plaintext = decryptToken(blob)
+
+  void supabase.rpc('mark_token_used', {
+    p_token_id: data.id,
+    p_used_for: 'gridge_gateway',
+  })
+
+  return {
+    tokenId: data.id,
+    plaintext,
+    vendor: data.vendor,
+    vendorWorkspaceId: data.vendor_workspace_id,
+  }
+}

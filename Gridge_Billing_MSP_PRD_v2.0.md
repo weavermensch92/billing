@@ -674,13 +674,33 @@ nullable — env `ANTHROPIC_API_KEY` fallback 사용 시 NULL. 운영 셋업 완
 // Before
 const upstream = process.env.ANTHROPIC_API_KEY;
 
-// After
+// After (이슈 #1 결정 (a) — 상품별 우선)
 const apiKey = await resolveGridgeApiKey(authHeader);
-const upstreamToken = await resolveUpstreamToken(apiKey.workspace_id, 'anthropic');
-const upstream = decrypt(upstreamToken.encrypted_value);
+const product = await getProduct(apiKey.product_id);
+
+let upstreamToken;
+if (product.upstream_admin_token_id) {
+  // 운영자가 콘솔에서 명시 지정한 토큰 (상품별 라우팅) — active 일 때만 사용
+  upstreamToken = await resolveUpstreamTokenById(product.upstream_admin_token_id);
+} else {
+  // 미지정 시 vendor 기반 자동 선택
+  upstreamToken = await resolveUpstreamToken(apiKey.workspace_id, product.upstream_vendor);
+}
+
+if (!upstreamToken) return 503;  // 명시 지정이 inactive 면 fallback 안 함 (운영자 의도 존중)
+const upstream = upstreamToken.plaintext;
 ```
 
-`resolveUpstreamToken` = `vendor_admin_tokens` 에서 `vendor='anthropic'` + 그릿지 self org 의 워크스페이스의 active token 1개 선택 (라운드로빈/우선순위 정책은 별도).
+**토큰 해결 우선순위 (PR #35):**
+
+1. `gridge_api_products.upstream_admin_token_id` 가 NOT NULL 이면 → 그 토큰을 사용 (active 여야 함)
+2. NULL 이면 → `vendor_admin_tokens` 에서 `vendor=product.upstream_vendor + status='active'` 최신 1건
+3. 둘 다 실패 → 503 `upstream_token_unconfigured` (env fallback 없음, PR #33 으로 제거)
+
+상품별 우선 정책 이유:
+- 운영자가 콘솔 (`/console/ai-api/products/[id]`) 에서 "이 상품에는 이 토큰을 쓰라" 명시 지정 가능 — 다중 토큰 라우팅
+- 명시 지정 토큰이 inactive 면 자동 fallback 하지 않음 — 운영자 의도가 명백하므로 무단 대체 금지
+- 미지정이 디폴트 — vendor 기반 자동 선택으로 운영 단순화
 
 **사용량 기록** (`recordGridgeApiUsage`)
 
