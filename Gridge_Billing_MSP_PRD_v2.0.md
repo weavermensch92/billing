@@ -508,45 +508,61 @@ PR #18~22 로 선행 구축된 **Gridge AI Gateway** (`api.gridge.ai` — 그릿
 
 #### 8.7.2 마이그레이션 단위 (M-2050~2055)
 
-**M-2050 — `services.kind` 컬럼 + 게이트웨이 row**
+**M-2050 — `services.category` 확장 + 게이트웨이 row**
+
+기존 `services.category` 가 `subscription|api|agent_credit|other` 였으므로, 의미 중복 회피를 위해 **별도 `kind` 컬럼 신설 대신 `category` 를 확장**.
 
 ```sql
-ALTER TABLE billing.services
-  ADD COLUMN kind text NOT NULL DEFAULT 'vendor_passthrough'
-    CHECK (kind IN ('vendor_passthrough','gridge_gateway','subscription'));
+ALTER TABLE billing.services DROP CONSTRAINT services_category_check;
+ALTER TABLE billing.services ADD CONSTRAINT services_category_check
+  CHECK (category IN ('subscription','api','agent_credit','other','gridge_gateway'));
 
-INSERT INTO billing.services (id, vendor, name, kind, status)
-VALUES ('gridge_gateway_v1', 'gridge', 'Gridge AI Gateway', 'gridge_gateway', 'active');
+INSERT INTO billing.services (id, name, vendor, category, tos_review_status, pricing_policy, is_active)
+VALUES (
+  '00000000-0000-0000-0000-000000005101'::uuid,
+  'Gridge AI Gateway', 'gridge', 'gridge_gateway', 'approved', 'passthrough', TRUE
+) ON CONFLICT (id) DO NOTHING;
 ```
 
-- `vendor_passthrough` = 고객이 벤더에 직접 (ChatGPT Team, Claude Team 등)
-- `gridge_gateway` = 고객이 그릿지 게이트웨이 경유 → 그릿지가 upstream 벤더에 재호출
-- `subscription` = 개인 구독 (Q3 — M-2006 이후)
+- `gridge_gateway` = 고객이 그릿지 게이트웨이 경유 → 그릿지가 upstream 벤더에 재호출 (마진 재청구)
+- 다른 카테고리는 기존 의미 유지 (`api` = 고객이 벤더 API 키 받아 직접 호출)
+- 고정 UUID `5101` 사용 — 다른 마이그레이션이 참조
 
 **M-2051 — 게이트웨이 워크스페이스 자동 생성 함수**
 
+`SECURITY DEFINER` + `service_role` 만 EXECUTE 가능. 서버 라우트에서 키 발급/사용량 기록 시 멱등 호출.
+
 ```sql
 CREATE FUNCTION billing.ensure_gateway_workspace(p_org_id uuid)
-RETURNS uuid LANGUAGE plpgsql AS $$
+RETURNS uuid
+LANGUAGE plpgsql SECURITY DEFINER
+AS $$
 DECLARE v_ws_id uuid;
+DECLARE v_service_id uuid := '00000000-0000-0000-0000-000000005101'::uuid;
 BEGIN
   SELECT id INTO v_ws_id
   FROM billing.vendor_workspaces
-  WHERE org_id = p_org_id AND service_id = 'gridge_gateway_v1';
+  WHERE org_id = p_org_id AND service_id = v_service_id AND status = 'active'
+  ORDER BY created_at ASC LIMIT 1;
 
   IF v_ws_id IS NULL THEN
     INSERT INTO billing.vendor_workspaces
-      (org_id, service_id, vendor_workspace_id, status, created_by_admin_id)
+      (org_id, service_id, vendor_workspace_id, display_name, status)
     VALUES
-      (p_org_id, 'gridge_gateway_v1', 'gw-' || p_org_id::text, 'active', NULL)
+      (p_org_id, v_service_id,
+       'gw-' || REPLACE(p_org_id::text, '-', ''),
+       'Gridge AI Gateway', 'active')
     RETURNING id INTO v_ws_id;
   END IF;
   RETURN v_ws_id;
 END;
 $$;
+
+REVOKE EXECUTE ON FUNCTION billing.ensure_gateway_workspace(uuid) FROM PUBLIC;
+GRANT  EXECUTE ON FUNCTION billing.ensure_gateway_workspace(uuid) TO service_role;
 ```
 
-`vendor_workspace_id = 'gw-<org_uuid>'` — 외부 ID 가 아닌 내부 식별자지만 컬럼 의미는 동일.
+`vendor_workspace_id = 'gw-<org_uuid_no_dash>'` — 외부 ID 가 아닌 내부 식별자지만 컬럼 의미는 동일.
 
 **M-2052 — `gridge_api_keys.workspace_id` FK + 백필**
 
@@ -595,18 +611,30 @@ ALTER TABLE billing.vendor_admin_tokens
 
 예: `vendor_workspaces(vendor='anthropic', org_id=<gridge_self_org>, vendor_workspace_id='gridge-master-prod')` row 의 admin token.
 
-**M-2055 — `gridge_self_org` seed**
+**M-2055 — `gridge_self_org` seed + RLS 격리**
 
 ```sql
 ALTER TABLE billing.orgs
   ADD COLUMN IF NOT EXISTS is_internal boolean NOT NULL DEFAULT false;
 
-INSERT INTO billing.orgs (id, name, is_internal)
-VALUES ('00000000-0000-0000-0000-000000000001', 'Gridge (internal)', true)
+CREATE INDEX IF NOT EXISTS idx_orgs_internal
+  ON billing.orgs(is_internal) WHERE is_internal = TRUE;
+
+INSERT INTO billing.orgs
+  (id, name, business_reg_no, plan, infra_mode, billing_mode,
+   status, credit_limit_krw, is_internal)
+VALUES
+  ('00000000-0000-0000-0000-000000000001', 'Gridge (internal)',
+   'gridge-self-internal', 'monthly', 'A', 'D', 'active', 0, TRUE)
 ON CONFLICT (id) DO NOTHING;
+
+-- RLS 보강: 일반 고객 SELECT 시 internal org 제외
+CREATE POLICY orgs_exclude_internal_from_customer
+  ON billing.orgs FOR SELECT
+  USING (is_internal = FALSE OR billing.is_admin_user());
 ```
 
-이 org 의 vendor_workspaces 가 upstream admin token 의 owner. RLS 에서 일반 고객 조회 제외.
+이 org 의 vendor_workspaces 가 upstream admin token 의 owner. `business_reg_no='gridge-self-internal'` 은 임시값 — 운영 단계에서 실제 그릿지 법인 등록번호로 교체.
 
 #### 8.7.3 코드 변경 영역
 
