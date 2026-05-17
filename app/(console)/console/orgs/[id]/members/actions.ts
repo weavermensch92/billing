@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createServiceRoleClientOrRedirect } from '@/lib/supabase/service-role'
+import { notifyMemberInvited } from '@/lib/email/events'
 import { actionErrorMessage, isRedirectError } from '@/lib/errors'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
@@ -161,6 +162,19 @@ export async function inviteOrgMember(formData: FormData) {
       visibility: 'both',
       detail: { email, name, role: roleRaw, invited_by: 'console_super', user_id: invitedUserId },
     })
+
+    // 메일 디스패치 — org 다른 owner/admin 에게 알림 (초대 본인은 Auth 매직링크).
+    try {
+      await notifyMemberInvited(service, {
+        orgId,
+        invitedEmail: email,
+        invitedName: name,
+        invitedRole: roleRaw,
+        invitedByEmail: user.email ?? null,
+      })
+    } catch (err) {
+      console.error('[inviteOrgMember notifyMemberInvited]', err)
+    }
   } catch (err) {
     if (isRedirectError(err)) throw err
     console.error('[inviteOrgMember]', err)
