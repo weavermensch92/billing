@@ -171,13 +171,16 @@ export default async function NewProductPage({
               defaultValue=""
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-500"
             >
-              <option value="">환경 변수 사용 (기본)</option>
+              <option value="">자동 선택 (vendor 의 최신 active 토큰)</option>
               {tokens.map(t => (
                 <option key={t.id} value={t.id}>
-                  [{t.vendor}] {t.token_label ?? t.vendor_workspace_id}
+                  [{t.vendor}] {t.token_label ?? t.vendor_workspace_id} · {t.vendor_workspace_id}
                 </option>
               ))}
             </select>
+            <p className="mt-1.5 text-xs text-gray-500">
+              상품 vendor 와 일치하는 토큰만 선택하세요. 제출 시 자동 검증되며, vendor 불일치/inactive 토큰은 차단됩니다.
+            </p>
             <p className="text-xs text-gray-500 mt-1">
               미선택 시 process.env 의 벤더별 키 사용. 특정 토큰 지정 시 그 토큰으로만 라우팅.
             </p>

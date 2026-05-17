@@ -103,6 +103,24 @@ export async function createProduct(formData: FormData) {
   const service = createServiceRoleClientOrRedirect(back)
   const serviceId = await lookupGridgeServiceId(service)
 
+  // 가드: upstream_admin_token_id 가 지정된 경우, 상품 vendor 와 일치하는 active 토큰이어야 함.
+  if (upstreamTokenId) {
+    const { data: tokenRow } = await service
+      .from('vendor_admin_tokens')
+      .select('vendor, status')
+      .eq('id', upstreamTokenId)
+      .maybeSingle()
+    if (!tokenRow) {
+      redirect(`${back}?error=` + encodeURIComponent('지정한 admin token 을 찾을 수 없습니다.'))
+    }
+    if (tokenRow.status !== 'active') {
+      redirect(`${back}?error=` + encodeURIComponent(`지정 토큰이 active 가 아닙니다 (현재: ${tokenRow.status})`))
+    }
+    if (tokenRow.vendor !== upstreamVendor) {
+      redirect(`${back}?error=` + encodeURIComponent(`vendor 불일치 — 상품 vendor=${upstreamVendor} 인데 토큰 vendor=${tokenRow.vendor}`))
+    }
+  }
+
   // code 중복 체크
   const { data: dup } = await service
     .from('gridge_api_products')
@@ -205,11 +223,29 @@ export async function updateProduct(formData: FormData) {
 
   const { data: before } = await service
     .from('gridge_api_products')
-    .select('id, code, display_name, input_price_per_1k_krw, output_price_per_1k_krw, upstream_input_price_per_1k_usd, upstream_output_price_per_1k_usd, fx_rate_krw_per_usd, markup_pct, markup_fixed_krw, rate_limit_rpm, daily_token_cap')
+    .select('id, code, display_name, upstream_vendor, input_price_per_1k_krw, output_price_per_1k_krw, upstream_input_price_per_1k_usd, upstream_output_price_per_1k_usd, fx_rate_krw_per_usd, markup_pct, markup_fixed_krw, rate_limit_rpm, daily_token_cap')
     .eq('id', productId)
     .maybeSingle()
   if (!before) {
     redirect('/console/ai-api?error=' + encodeURIComponent('상품을 찾을 수 없습니다.'))
+  }
+
+  // 가드: upstream_admin_token_id 가 지정된 경우, 상품 vendor 와 일치하는 active 토큰이어야 함.
+  if (upstreamTokenId) {
+    const { data: tokenRow } = await service
+      .from('vendor_admin_tokens')
+      .select('vendor, status')
+      .eq('id', upstreamTokenId)
+      .maybeSingle()
+    if (!tokenRow) {
+      redirect(`${back}?error=` + encodeURIComponent('지정한 admin token 을 찾을 수 없습니다.'))
+    }
+    if (tokenRow.status !== 'active') {
+      redirect(`${back}?error=` + encodeURIComponent(`지정 토큰이 active 가 아닙니다 (현재: ${tokenRow.status})`))
+    }
+    if (tokenRow.vendor !== before.upstream_vendor) {
+      redirect(`${back}?error=` + encodeURIComponent(`vendor 불일치 — 상품 vendor=${before.upstream_vendor} 인데 토큰 vendor=${tokenRow.vendor}`))
+    }
   }
 
   try {
