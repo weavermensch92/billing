@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
+import { updateWorkspaceStatus } from './actions'
 
 interface WorkspaceRow {
   id: string
@@ -19,7 +21,11 @@ const STATUS_LABEL: Record<WorkspaceRow['status'], { label: string; color: strin
   terminated: { label: '종료',   color: 'text-gray-600 bg-gray-100' },
 }
 
-export default async function WorkspacesPage() {
+export default async function WorkspacesPage({
+  searchParams,
+}: {
+  searchParams: { error?: string; ok?: string; created?: string }
+}) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/console/login')
@@ -50,19 +56,47 @@ export default async function WorkspacesPage() {
     0,
   )
 
+  const isSuper = admin.role === 'super'
+
   return (
     <div className="max-w-6xl mx-auto py-8 px-4 space-y-6">
+      {(searchParams.error || searchParams.ok || searchParams.created) && (
+        <div
+          className={`border-l-[3px] pl-3 py-2 text-sm ${
+            searchParams.error
+              ? 'border-l-red-500 text-red-700 bg-red-50'
+              : 'border-l-green-500 text-green-700 bg-green-50'
+          }`}
+        >
+          {searchParams.error
+            ? decodeURIComponent(searchParams.error)
+            : searchParams.created
+              ? `"${decodeURIComponent(searchParams.created)}" 워크스페이스가 등록됐습니다.`
+              : decodeURIComponent(searchParams.ok ?? '')}
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">벤더 워크스페이스</h1>
           <p className="text-sm text-gray-500 mt-1">
-            Anthropic Console / OpenAI Platform 등 벤더 측 워크스페이스 등록 현황. M-2001 / PRD §3 Q1.
+            Anthropic Console / OpenAI Platform 등 벤더 측 워크스페이스 등록 현황.
           </p>
         </div>
-        <div className="flex gap-3 text-sm">
-          <span>활성 <span className="font-mono">{activeCount}</span></span>
-          <span>전체 <span className="font-mono">{list.length}</span></span>
-          <span className="text-gray-500">멤버 합 <span className="font-mono">{totalMemberCount}</span></span>
+        <div className="flex items-center gap-4">
+          <div className="flex gap-3 text-sm text-gray-600">
+            <span>활성 <span className="font-mono">{activeCount}</span></span>
+            <span>전체 <span className="font-mono">{list.length}</span></span>
+            <span>멤버 합 <span className="font-mono">{totalMemberCount}</span></span>
+          </div>
+          {isSuper && (
+            <Link
+              href="/console/workspaces/new"
+              className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg"
+            >
+              + 새 워크스페이스
+            </Link>
+          )}
         </div>
       </div>
 
@@ -77,13 +111,14 @@ export default async function WorkspacesPage() {
             <th className="py-2 px-3 text-right">활성 멤버</th>
             <th className="py-2 px-3">상태</th>
             <th className="py-2 px-3">생성</th>
+            {isSuper && <th className="py-2 px-3">액션</th>}
           </tr>
         </thead>
         <tbody>
           {list.length === 0 && (
             <tr>
-              <td colSpan={8} className="py-12 text-center text-gray-400">
-                등록된 워크스페이스 없음 · 후속 PR (M-2003) 에서 등록 액션 활성화 예정.
+              <td colSpan={isSuper ? 9 : 8} className="py-12 text-center text-gray-400">
+                등록된 워크스페이스 없음
               </td>
             </tr>
           )}
@@ -106,21 +141,39 @@ export default async function WorkspacesPage() {
                 <td className="py-2 px-3 font-mono text-xs text-gray-500">
                   {r.created_at.slice(0, 10)}
                 </td>
+                {isSuper && (
+                  <td className="py-2 px-3">
+                    <form action={updateWorkspaceStatus} className="flex items-center gap-1">
+                      <input type="hidden" name="workspace_id" value={r.id} />
+                      <select
+                        name="status"
+                        defaultValue={r.status}
+                        className="text-xs border border-gray-200 rounded px-1 py-0.5"
+                      >
+                        <option value="active">활성</option>
+                        <option value="suspended">정지</option>
+                        <option value="terminated">종료</option>
+                      </select>
+                      <button
+                        type="submit"
+                        className="text-xs text-blue-600 hover:underline px-1"
+                      >
+                        변경
+                      </button>
+                    </form>
+                  </td>
+                )}
               </tr>
             )
           })}
         </tbody>
       </table>
 
-      <div className="text-xs text-gray-500 border-l-[3px] border-l-gray-300 pl-3 py-2 space-y-1">
+      <div className="text-xs text-gray-500 border-l-[3px] border-l-gray-300 pl-3 py-2">
         <p>
-          본 화면은 <code className="font-mono text-xs">vendor_workspaces</code> 테이블 (M-2001) +{' '}
-          <code className="font-mono text-xs">workspace_members</code> (M-2002) 의 read-only 뷰.
-        </p>
-        <p>
-          생성/수정/멤버 등록은 후속 마이그레이션 M-2003 (accounts.kind / workspace_id) 이후 활성화.
-          현재 row 는 기존 <code className="font-mono text-xs">vendor_invoices.vendor_workspace_id</code> 로부터
-          자동 backfill 됨.
+          <code className="font-mono text-xs">vendor_workspaces</code> ×{' '}
+          <code className="font-mono text-xs">workspace_members</code> 테이블 기반.
+          멤버 등록은 accounts 화면에서 workspace 연결 후 가능.
         </p>
       </div>
     </div>
