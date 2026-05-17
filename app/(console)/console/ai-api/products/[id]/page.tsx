@@ -71,11 +71,15 @@ export default async function ProductDetailPage({
     redirect('/console/ai-api?error=' + encodeURIComponent('상품을 찾을 수 없습니다.'))
   }
 
+  // 토큰 드롭다운은 상품의 upstream_vendor 와 일치하는 active 토큰만 표시.
+  // (vendor 불일치 토큰 선택 시 게이트웨이 호출 시점에 vendor mismatch 로 실패하므로
+  //  운영자가 선택 단계에서 실수하지 않도록 필터링.)
   const { data: tokensRaw } = await supabase
     .from('vendor_admin_tokens')
     .select('id, vendor, vendor_workspace_id, token_label')
     .eq('status', 'active')
-    .order('vendor')
+    .eq('vendor', product.upstream_vendor)
+    .order('vendor_workspace_id')
   const tokens = (tokensRaw ?? []) as VendorToken[]
 
   return (
@@ -202,7 +206,7 @@ export default async function ProductDetailPage({
 
         <div className="border-t border-gray-200 pt-5">
           <label htmlFor="upstream_admin_token_id" className="block text-sm font-medium text-gray-700 mb-1">
-            Upstream Admin Token
+            Upstream Admin Token ({product.upstream_vendor})
           </label>
           <select
             id="upstream_admin_token_id"
@@ -210,13 +214,30 @@ export default async function ProductDetailPage({
             defaultValue={product.upstream_admin_token_id ?? ''}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-500"
           >
-            <option value="">환경 변수 사용 (기본)</option>
+            <option value="">자동 선택 (vendor 의 최신 active 토큰)</option>
             {tokens.map(t => (
               <option key={t.id} value={t.id}>
-                [{t.vendor}] {t.token_label ?? t.vendor_workspace_id}
+                {t.token_label ?? t.vendor_workspace_id} · {t.vendor_workspace_id}
               </option>
             ))}
           </select>
+          {tokens.length === 0 ? (
+            <p className="mt-2 text-xs text-amber-700">
+              ⚠ <span className="font-mono">{product.upstream_vendor}</span> active 토큰이 없습니다.{' '}
+              <Link
+                href="/console/ai-api/gateway-tokens"
+                className="text-brand-600 hover:underline font-medium"
+              >
+                토큰 등록 →
+              </Link>{' '}
+              미등록 시 게이트웨이 호출이 503 응답.
+            </p>
+          ) : (
+            <p className="mt-2 text-xs text-gray-500">
+              상품의 upstream_vendor (<span className="font-mono">{product.upstream_vendor}</span>) 와 일치하는 active 토큰만 표시.
+              미지정 시 vendor 의 최신 active 토큰이 자동 선택됩니다.
+            </p>
+          )}
         </div>
 
         <div className="border-t border-gray-200 pt-5">
