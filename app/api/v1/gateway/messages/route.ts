@@ -25,9 +25,8 @@
 import { NextResponse } from 'next/server'
 import { authenticateGridgeKey, touchKeyUsage } from '@/lib/gateway/auth'
 import { resolveUpstreamToken, resolveUpstreamTokenById } from '@/lib/billing/gateway/upstream-token'
+import { getVendorClient, listSupportedVendors } from '@/lib/billing/gateway/vendor-clients'
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
-
-type AnthropicUsage = { input_tokens?: number; output_tokens?: number }
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -79,11 +78,14 @@ export async function POST(req: Request) {
   if (!product.is_active) {
     return errorResponse(403, 'product_inactive', `상품이 비활성화되었습니다: ${product.code}`)
   }
-  if (product.upstream_vendor !== 'anthropic') {
+
+  // vendor client 조회 — 지원 안 하는 vendor 면 501 + 지원 목록 안내
+  const vendorClient = getVendorClient(product.upstream_vendor)
+  if (!vendorClient) {
     return errorResponse(
       501,
       'upstream_not_supported',
-      `${product.upstream_vendor} 라우팅은 아직 미구현 (PR #5 v1: anthropic 만).`,
+      `${product.upstream_vendor} 라우팅은 아직 미구현. 현재 지원: ${listSupportedVendors().join(', ')}.`,
     )
   }
 
@@ -156,11 +158,10 @@ export async function POST(req: Request) {
   let upstreamRes: Response
   let upstreamJson: Record<string, unknown>
   try {
-    upstreamRes = await fetch('https://api.anthropic.com/v1/messages', {
+    upstreamRes = await fetch(vendorClient.url, {
       method: 'POST',
       headers: {
-        'x-api-key': upstreamKey,
-        'anthropic-version': '2023-06-01',
+        ...vendorClient.buildHeaders(upstreamKey),
         'content-type': 'application/json',
       },
       body: JSON.stringify(body),
@@ -172,10 +173,10 @@ export async function POST(req: Request) {
 
   const latencyMs = Date.now() - startedAt
 
-  // 5) 토큰 사용량 + 단가 스냅샷 → cost_krw
-  const usage = (upstreamJson.usage as AnthropicUsage) ?? {}
-  const inputTokens = usage.input_tokens ?? 0
-  const outputTokens = usage.output_tokens ?? 0
+  // 5) 토큰 사용량 + 단가 스냅샷 → cost_krw (vendor 별 응답 구조 추상화)
+  const parsedUsage = vendorClient.parseUsage(upstreamJson)
+  const inputTokens = parsedUsage.inputTokens
+  const outputTokens = parsedUsage.outputTokens
   const inputCost = (inputTokens / 1000) * product.input_price_per_1k_krw
   const outputCost = (outputTokens / 1000) * product.output_price_per_1k_krw
   const rawCost = Math.ceil(inputCost + outputCost)
@@ -217,7 +218,7 @@ export async function POST(req: Request) {
       org_id: key.org_id,
       workspace_id: key.workspace_id, // M-2053 (PR #28)
       product_id: product.id,
-      request_id: (upstreamJson.id as string) ?? null,
+      request_id: parsedUsage.requestId,
       model_used: product.upstream_model,
       input_tokens: inputTokens,
       output_tokens: outputTokens,
@@ -228,7 +229,7 @@ export async function POST(req: Request) {
       output_price_per_1k_krw_snapshot: product.output_price_per_1k_krw,
       cost_krw: costKrw,
       upstream_vendor: product.upstream_vendor,
-      upstream_request_id: (upstreamJson.id as string) ?? null,
+      upstream_request_id: parsedUsage.requestId,
       upstream_cost_usd: null, // PR #5 v2 에서 환율 계산 추가
       upstream_admin_token_id: upstreamTokenId, // M-2056 (PR #30) — NULL = env fallback
       wallet_ledger_id: walletLedgerId,
