@@ -83,11 +83,20 @@ export async function inviteAdmin(formData: FormData) {
     })
 
     if (inviteRes.error) {
+      // 흔한 원인: Supabase Dashboard 의 SMTP Provider 미설정,
+      // 또는 rate limit (기본 메일러는 시간당 3건 제한)
       redirect(
         '/console/admins/new?error=' +
-          encodeURIComponent('초대 메일 발송 실패: ' + inviteRes.error.message),
+          encodeURIComponent(
+            '초대 메일 발송 실패: ' + inviteRes.error.message +
+            ' (Supabase Dashboard → Auth → SMTP 설정 확인)',
+          ),
       )
     }
+
+    // invite 응답의 user.id 를 admin_users.user_id 에 명시 — handle_new_auth_user
+    // 트리거의 매칭 race 회피 + 차후 로그인 시 user_id 기반 권한 검증 보장.
+    const invitedUserId = inviteRes.data?.user?.id ?? null
 
     const { data: inserted, error: insertErr } = await serviceRole
       .from('admin_users')
@@ -95,6 +104,7 @@ export async function inviteAdmin(formData: FormData) {
         email,
         name,
         role: roleRaw,
+        user_id: invitedUserId,
         is_active: true,
         totp_secret: null,
       })
@@ -119,7 +129,7 @@ export async function inviteAdmin(formData: FormData) {
       target_type: 'admin_user',
       target_id: insertedId,
       visibility: 'internal_only',
-      detail: { email, name, role: roleRaw },
+      detail: { email, name, role: roleRaw, user_id: invitedUserId },
     })
   } catch (err) {
     if (isRedirectError(err)) throw err
