@@ -97,9 +97,9 @@ export async function POST(req: Request) {
   // 모델은 product 의 upstream_model 로 고정 — 고객이 임의 변경 못 함
   body.model = product.upstream_model
 
-  // 4) Upstream admin token 해결 (PR #29 M-2054)
-  //    vendor_admin_tokens 에서 active token 1건 선택. 매칭 실패 시 env fallback
-  //    (점진적 도입 — env fallback 은 PR #30 에서 제거 예정).
+  // 4) Upstream admin token 해결 (M-2054 / PR #29)
+  //    vendor_admin_tokens 에서 active anthropic 토큰 1건 선택.
+  //    env fallback 제거 — 운영 셋업 (콘솔 /console/ai-api/gateway-tokens) 필수.
   let upstreamTokenId: string | null = null
   let upstreamKey: string | null = null
   try {
@@ -110,17 +110,18 @@ export async function POST(req: Request) {
     }
   } catch (err) {
     console.error('[gateway resolve upstream token]', err)
+    return errorResponse(
+      502,
+      'upstream_token_error',
+      'Upstream admin token 조회 실패. 운영자에게 문의하세요.',
+    )
   }
 
   if (!upstreamKey) {
-    // Fallback: vendor_admin_tokens 매칭 실패 시 env 사용 (점진적)
-    upstreamKey = process.env.ANTHROPIC_API_KEY ?? null
-  }
-  if (!upstreamKey) {
     return errorResponse(
-      500,
-      'upstream_config_missing',
-      'Upstream 키 미설정 (vendor_admin_tokens active 토큰 없음 + ANTHROPIC_API_KEY 미설정)',
+      503,
+      'upstream_token_unconfigured',
+      'Upstream admin token 이 등록되지 않았습니다. 콘솔에서 anthropic active 토큰 등록 후 재시도하세요. (/console/ai-api/gateway-tokens)',
     )
   }
 
