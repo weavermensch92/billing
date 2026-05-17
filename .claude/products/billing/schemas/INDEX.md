@@ -192,3 +192,26 @@
 - 회계 분리 필드: `rules/anthropic_passthrough.md` (PB-007)
 - 티어별 필드: `rules/billing_tier.md` (PB-003)
 - ERD: `02_시스템_아키텍처.md § 3-2` + `03_데이터_모델.md § 18`
+
+---
+
+## v2.0 — 4분면 PRD 신설 테이블 (Phase 1 시작)
+
+`Gridge_Billing_v2.0_Quadrant_PRD.md` 의 A × B 4분면 모델에 따른 추가. 기존 18 테이블 카탈로그와 별개 트랙으로 진행.
+
+| 테이블 | 책임 | 우선 | PRD 절 | 마이그레이션 |
+|---|---|---|---|---|
+| `vendor_workspaces` | 벤더 측 워크스페이스 (org × service) 1급 시민화 | ★ Phase 1 (M-2001) | §8.1 | `20260517000001_q1_vendor_workspaces.sql` ✅ |
+| `workspace_members` | 워크스페이스 가입 이력 (workspace × account) | ★ Phase 1 (M-2002) | §8.2 | 위와 동일 ✅ |
+| `subscriptions` | Q3·Q4 개인 구독 | Phase 2 (M-2006) | §8.3 | 미구현 |
+| `subscription_charges` | 구독 회차별 결제 | Phase 2 (M-2007) | §8.4 | 미구현 |
+| `receipts` | Q2·Q4 멤버 영수증 | Phase 3 (M-2009) | §8.5 | 미구현 |
+| `payouts` | 환급 송금 | Phase 3 (M-2010) | §8.6 | 미구현 |
+| `member_bank_accounts` | 멤버 계좌 (AES-256) | Phase 3 (M-2011) | §8.7 | 미구현 |
+| `reimbursement_policies` | 환급 정책 | Phase 3 (M-2012) | §8.8 | 미구현 |
+
+후속 마이그레이션이 기존 테이블에 컬럼 추가:
+- M-2003: `accounts.kind` / `workspace_id` / `payer_type`
+- M-2004: `virtual_cards.workspace_id` / `subscription_id` / `card_kind`
+- M-2005: `vendor_invoices.workspace_id` (UUID FK) / `source_type`
+- M-2008: `services.expected_merchant_pattern` / `default_billing_period` / `supports_gridge_card` / `supports_member_reimbursement`
