@@ -3,6 +3,7 @@
 import crypto from 'node:crypto'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceRoleClientOrRedirect } from '@/lib/supabase/service-role'
+import { ensureGatewayWorkspace } from '@/lib/billing/gateway/workspace'
 import { actionErrorMessage, isRedirectError } from '@/lib/errors'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
@@ -107,6 +108,14 @@ export async function issueGridgeKey(formData: FormData) {
 
   const { plaintext, prefix, hash } = generateKey()
 
+  // M-2052: 발급 전 게이트웨이 워크스페이스 보장 (lazy 생성)
+  let workspaceId: string
+  try {
+    workspaceId = await ensureGatewayWorkspace(service, orgId)
+  } catch (err) {
+    redirect(`${back}?error=` + encodeURIComponent('워크스페이스 준비 실패: ' + actionErrorMessage(err)))
+  }
+
   let newKeyId: string
   try {
     const { data: inserted, error: insertErr } = await service
@@ -114,6 +123,7 @@ export async function issueGridgeKey(formData: FormData) {
       .insert({
         org_id: orgId,
         product_id: productId,
+        workspace_id: workspaceId,
         key_prefix: prefix,
         key_hash: hash,
         status: 'active',
@@ -177,7 +187,7 @@ export async function rotateGridgeKey(formData: FormData) {
 
   const { data: oldKey } = await service
     .from('gridge_api_keys')
-    .select('id, org_id, product_id, status, label, monthly_spend_cap_krw, key_prefix')
+    .select('id, org_id, product_id, workspace_id, status, label, monthly_spend_cap_krw, key_prefix')
     .eq('id', keyId)
     .maybeSingle()
   if (!oldKey) {
@@ -192,12 +202,13 @@ export async function rotateGridgeKey(formData: FormData) {
 
   let newKeyId: string
   try {
-    // 1) 신규 키 INSERT
+    // 1) 신규 키 INSERT — 회전이므로 구 키의 workspace_id 를 그대로 승계
     const { data: inserted, error: insertErr } = await service
       .from('gridge_api_keys')
       .insert({
         org_id: oldKey.org_id,
         product_id: oldKey.product_id,
+        workspace_id: oldKey.workspace_id,
         key_prefix: prefix,
         key_hash: hash,
         status: 'active',
