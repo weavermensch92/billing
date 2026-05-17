@@ -64,7 +64,7 @@ export default async function NewWorkspacePage({
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
           >
             <option value="">Org 선택</option>
-            {(orgs ?? []).map((org) => (
+            {(orgs ?? []).map((org: { id: string; name: string }) => (
               <option key={org.id} value={org.id}>
                 {org.name}
               </option>
@@ -82,7 +82,7 @@ export default async function NewWorkspacePage({
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
           >
             <option value="">서비스 선택</option>
-            {(services ?? []).map((svc) => (
+            {(services ?? []).map((svc: { id: string; name: string; vendor: string }) => (
               <option key={svc.id} value={svc.id}>
                 [{svc.vendor}] {svc.name}
               </option>
