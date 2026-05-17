@@ -9,6 +9,7 @@ type Token = {
   id: string
   vendor: string
   vendor_workspace_id: string
+  workspace_id: string | null
   token_label: string
   token_prefix: string | null
   status: 'active' | 'rotated' | 'revoked' | 'expired'
@@ -20,6 +21,13 @@ type Token = {
   revoked_at: string | null
   revoked_reason: string | null
   rotated_at: string | null
+}
+
+type SelfWorkspace = {
+  id: string
+  vendor_workspace_id: string
+  display_name: string
+  service: { vendor: string; name: string } | null
 }
 
 const VENDOR_LABEL: Record<string, string> = {
@@ -60,7 +68,7 @@ export default async function GatewayTokensPage({
 
   let query = supabase
     .from('vendor_admin_tokens')
-    .select('id, vendor, vendor_workspace_id, token_label, token_prefix, status, registered_at, expires_at, last_used_at, last_used_for, use_count, revoked_at, revoked_reason, rotated_at')
+    .select('id, vendor, vendor_workspace_id, workspace_id, token_label, token_prefix, status, registered_at, expires_at, last_used_at, last_used_for, use_count, revoked_at, revoked_reason, rotated_at')
     .eq('org_id', GRIDGE_SELF_ORG_ID)
     .order('registered_at', { ascending: false })
 
@@ -68,6 +76,16 @@ export default async function GatewayTokensPage({
 
   const { data: tokensRaw } = await query
   const tokens = (tokensRaw ?? []) as Token[]
+
+  // Gridge self org 의 active vendor_workspaces 목록 (등록 폼 드롭다운)
+  // service.vendor 를 JOIN 으로 가져와 vendor 매칭 검증에 사용.
+  const { data: workspacesRaw } = await supabase
+    .from('vendor_workspaces')
+    .select('id, vendor_workspace_id, display_name, service:services(vendor, name)')
+    .eq('org_id', GRIDGE_SELF_ORG_ID)
+    .eq('status', 'active')
+    .order('vendor_workspace_id')
+  const workspaces = (workspacesRaw ?? []) as SelfWorkspace[]
 
   return (
     <div className="space-y-6">
@@ -151,6 +169,34 @@ export default async function GatewayTokensPage({
               className="w-full px-3 py-2 text-sm font-mono border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
           </div>
+          <div className="md:col-span-2">
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Workspace 매핑 (M-2054, 선택)
+            </label>
+            <select
+              name="workspace_id"
+              defaultValue=""
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+            >
+              <option value="">매핑 안 함 (nullable 유지)</option>
+              {workspaces.map(w => (
+                <option key={w.id} value={w.id}>
+                  [{w.service?.vendor ?? '?'}] {w.display_name} · {w.vendor_workspace_id}
+                </option>
+              ))}
+            </select>
+            {workspaces.length === 0 ? (
+              <p className="mt-1.5 text-xs text-amber-700">
+                Gridge self org 에 등록된 active vendor_workspaces 가 없습니다.
+                Workspace 매핑 없이 토큰만 등록 가능 (workspace_id = NULL).
+              </p>
+            ) : (
+              <p className="mt-1.5 text-xs text-gray-500">
+                선택한 workspace 의 service.vendor 와 위 Vendor 가 일치해야 합니다 (서버 가드).
+                미선택 시 토큰의 workspace_id 는 NULL (점진적 도입).
+              </p>
+            )}
+          </div>
           <div className="md:col-span-2 flex justify-end">
             <button
               type="submit"
@@ -205,7 +251,14 @@ export default async function GatewayTokensPage({
             {tokens.map(t => (
               <tr key={t.id} className="hover:bg-gray-50">
                 <td className="px-4 py-2">{VENDOR_LABEL[t.vendor] ?? t.vendor}</td>
-                <td className="px-4 py-2 font-mono text-xs">{t.vendor_workspace_id}</td>
+                <td className="px-4 py-2 font-mono text-xs">
+                  {t.vendor_workspace_id}
+                  {t.workspace_id ? (
+                    <span className="ml-1 inline-block text-[10px] text-green-700 bg-green-50 px-1 rounded">FK</span>
+                  ) : (
+                    <span className="ml-1 inline-block text-[10px] text-amber-700 bg-amber-50 px-1 rounded">미매핑</span>
+                  )}
+                </td>
                 <td className="px-4 py-2">{t.token_label}</td>
                 <td className="px-4 py-2 font-mono text-xs text-gray-600">
                   {t.token_prefix ?? '—'}<span className="text-gray-300">·····</span>
