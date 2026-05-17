@@ -81,6 +81,14 @@ export async function createProduct(formData: FormData) {
   const dailyTokenCap = dailyTokenCapRaw < 0 ? null : dailyTokenCapRaw
   const isActive = formData.get('is_active') === 'on'
 
+  // M-2057: 가격 정책 분리 — upstream USD / 환율 / markup (신규 상품에서도 입력 받음)
+  const upstreamInputUsd = Math.max(0, num(formData.get('upstream_input_price_per_1k_usd'), 0))
+  const upstreamOutputUsd = Math.max(0, num(formData.get('upstream_output_price_per_1k_usd'), 0))
+  const fxRateRawCreate = formData.get('fx_rate_krw_per_usd') as string | null
+  const fxRateCreate = fxRateRawCreate && fxRateRawCreate.trim() !== '' ? Math.max(0, Number(fxRateRawCreate)) : null
+  const markupPctCreate = Math.max(0, Math.min(1000, num(formData.get('markup_pct'), 0)))
+  const markupFixedKrwCreate = Math.max(0, num(formData.get('markup_fixed_krw'), 0))
+
   if (!/^[a-z0-9-]{3,50}$/i.test(code)) {
     redirect(`${back}?error=` + encodeURIComponent('상품 코드는 영문/숫자/하이픈 3~50자 (예: gridge-ai-v1).'))
   }
@@ -146,6 +154,12 @@ export async function createProduct(formData: FormData) {
         upstream_admin_token_id: upstreamTokenId,
         input_price_per_1k_krw: inputPrice,
         output_price_per_1k_krw: outputPrice,
+        upstream_input_price_per_1k_usd: upstreamInputUsd,
+        upstream_output_price_per_1k_usd: upstreamOutputUsd,
+        fx_rate_krw_per_usd: fxRateCreate,
+        markup_pct: markupPctCreate,
+        markup_fixed_krw: markupFixedKrwCreate,
+        pricing_updated_at: new Date().toISOString(),
         min_charge_krw: minCharge,
         rate_limit_rpm: rateLimit,
         daily_token_cap: dailyTokenCap,
