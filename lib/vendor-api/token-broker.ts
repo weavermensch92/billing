@@ -18,7 +18,7 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:
 
 type SBLike = {
   from: (t: string) => any
-  rpc: (name: string, params?: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>
+  rpc: (name: string, params?: Record<string, unknown>) => any
 }
 
 const ALGO = 'aes-256-gcm'
