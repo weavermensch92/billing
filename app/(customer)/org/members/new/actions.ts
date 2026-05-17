@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createServiceRoleClient } from '@/lib/supabase/service-role'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 
@@ -37,20 +38,47 @@ export async function inviteMember(formData: FormData) {
     redirect('/org/members/new?error=' + encodeURIComponent('이미 초대된 이메일입니다.'))
   }
 
-  // members 레코드 생성
-  const { error } = await supabase.from('members').insert({
+  // Supabase Auth 초대 메일 발송 — service_role 필요 (auth.admin.* 권한)
+  // 콘솔의 console/orgs/[id]/members/actions.ts 와 동일한 패턴.
+  // 메일 발송 실패 시 members row 도 INSERT 안 함 (atomicity).
+  const service = createServiceRoleClient()
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  const inviteRes = await service.auth.admin.inviteUserByEmail(email, {
+    redirectTo: appUrl ? `${appUrl}/auth/callback` : undefined,
+    data: {
+      invited_org_id: currentMember.org_id,
+      invited_role: role,
+      invited_name: name,
+      invited_by: user.email ?? null,
+    },
+  })
+
+  if (inviteRes.error) {
+    redirect(
+      '/org/members/new?error=' +
+        encodeURIComponent('초대 메일 발송 실패: ' + inviteRes.error.message),
+    )
+  }
+
+  // members 레코드 생성 (service_role 로 INSERT — handle_new_auth_user 트리거가
+  // 가입 완료 시 user_id 채움)
+  const { error } = await service.from('members').insert({
     org_id: currentMember.org_id,
-    email, name, role,
+    email,
+    name,
+    role,
     status: 'invited',
     invited_at: new Date().toISOString(),
   })
 
   if (error) {
-    redirect(`/org/members/new?error=${encodeURIComponent('초대 실패: ' + error.message)}`)
+    // 메일은 이미 발송됨 — 운영자가 수동 정리. 사용자에겐 명확한 에러.
+    console.error('[inviteMember] members INSERT failed after Auth invite', error)
+    redirect('/org/members/new?error=' + encodeURIComponent('초대 메일은 발송됐으나 멤버 레코드 생성 실패: ' + error.message + ' (Owner 에게 문의)'))
   }
 
   // 감사 로그 기록
-  await supabase.from('audit_logs').insert({
+  await service.from('audit_logs').insert({
     org_id: currentMember.org_id,
     actor_type: 'member',
     actor_id: currentMember.id,
@@ -60,9 +88,6 @@ export async function inviteMember(formData: FormData) {
     visibility: 'both',
     detail: { email, name, role },
   })
-
-  // TODO: Supabase Auth inviteUserByEmail — service role 필요. Phase 0에서는 Luna가 수동 초대 링크 발송 가능
-  // 현재는 DB 레코드만 생성, 실제 이메일 발송은 Phase 1+
 
   revalidatePath('/org/members')
   redirect('/org/members?invited=1')
