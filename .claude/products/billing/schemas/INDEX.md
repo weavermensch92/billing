@@ -215,3 +215,11 @@
 - M-2004: `virtual_cards.workspace_id` / `subscription_id` / `card_kind` — `20260517000003_q1_virtual_cards_kind.sql` ✅
 - M-2005: `vendor_invoices.workspace_id` (UUID FK) / `source_type` — `20260517000004_q1_vendor_invoices_workspace.sql` ✅
 - M-2008: `services.expected_merchant_pattern` / `default_billing_period` / `supports_gridge_card` / `supports_member_reimbursement`
+
+**Phase 1.5 — Gridge Gateway 통합 (PRD §8.7)**:
+- M-2050: `services.category` 확장 ('gridge_gateway') + Gridge AI Gateway 서비스 row — `20260517000005_q1_gateway_infra.sql` ✅
+- M-2051: `billing.ensure_gateway_workspace(org_id)` SECURITY DEFINER 함수 — 위와 동일 ✅
+- M-2055: `orgs.is_internal` + `gridge_self_org` seed + RLS 격리 — 위와 동일 ✅
+- M-2052: `gridge_api_keys.workspace_id` FK + 백필 (예정)
+- M-2053: `gridge_api_usage_events.workspace_id` 백필 (예정)
+- M-2054: `vendor_admin_tokens.workspace_id` (upstream 측) (예정)
