@@ -48,6 +48,7 @@ export async function registerGatewayToken(formData: FormData) {
   const vendorWorkspaceId = sanitize(formData.get('vendor_workspace_id') as string, 200)
   const tokenLabel = sanitize(formData.get('token_label') as string, 100)
   const plaintextToken = sanitize(formData.get('plaintext_token') as string, 4000)
+  const workspaceId = sanitize(formData.get('workspace_id') as string, 50) || null
 
   if (!vendor) {
     redirect(`${back}?error=` + encodeURIComponent('vendor 필수'))
@@ -65,6 +66,30 @@ export async function registerGatewayToken(formData: FormData) {
   const { user, me } = await authorizeSuper()
   const service = createServiceRoleClientOrRedirect(back)
 
+  // M-2054 매핑 가드: workspace_id 가 지정된 경우 Gridge self org 의 active
+  //                workspace 이고 service.vendor 가 입력 vendor 와 일치해야 함.
+  if (workspaceId) {
+    const { data: wsRow } = await service
+      .from('vendor_workspaces')
+      .select('id, org_id, status, service:services(vendor)')
+      .eq('id', workspaceId)
+      .maybeSingle()
+    if (!wsRow) {
+      redirect(`${back}?error=` + encodeURIComponent('지정한 workspace 를 찾을 수 없습니다.'))
+    }
+    if (wsRow.org_id !== GRIDGE_SELF_ORG_ID) {
+      redirect(`${back}?error=` + encodeURIComponent('workspace 가 Gridge self org 소속이 아닙니다.'))
+    }
+    if (wsRow.status !== 'active') {
+      redirect(`${back}?error=` + encodeURIComponent(`workspace 가 active 가 아닙니다 (현재: ${wsRow.status})`))
+    }
+    const wsVendor = (wsRow.service as { vendor?: string } | { vendor?: string }[] | null)
+    const vendorFromService = Array.isArray(wsVendor) ? wsVendor[0]?.vendor : wsVendor?.vendor
+    if (vendorFromService && vendorFromService !== vendor) {
+      redirect(`${back}?error=` + encodeURIComponent(`vendor 불일치 — 입력 vendor=${vendor} 와 workspace service vendor=${vendorFromService} 다름`))
+    }
+  }
+
   try {
     const { tokenId, tokenPrefix } = await registerVendorToken(service, {
       orgId: GRIDGE_SELF_ORG_ID,
@@ -74,6 +99,18 @@ export async function registerGatewayToken(formData: FormData) {
       plaintextToken,
       registeredBySuperAdminId: me.id,
     })
+
+    // M-2054: workspace_id 매핑 (선택 사항)
+    if (workspaceId) {
+      const { error: linkErr } = await service
+        .from('vendor_admin_tokens')
+        .update({ workspace_id: workspaceId })
+        .eq('id', tokenId)
+      if (linkErr) {
+        console.error('[registerGatewayToken workspace link]', linkErr)
+        // 매핑 실패는 토큰 등록 자체는 성공이므로 경고만, 차후 수동 보정 가능.
+      }
+    }
 
     await service.from('audit_logs').insert({
       org_id: GRIDGE_SELF_ORG_ID,
@@ -89,6 +126,7 @@ export async function registerGatewayToken(formData: FormData) {
         vendor_workspace_id: vendorWorkspaceId,
         token_label: tokenLabel,
         token_prefix: tokenPrefix,
+        workspace_id: workspaceId,
       },
     })
   } catch (err) {
