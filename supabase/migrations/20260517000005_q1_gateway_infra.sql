@@ -63,24 +63,18 @@ CREATE INDEX IF NOT EXISTS idx_orgs_internal
 
 -- gridge_self_org row (고정 UUID)
 -- business_reg_no 는 그릿지 실제 법인 번호로 운영 단계에서 교체 가능.
+-- plan/infra_mode/billing_mode/status 는 DEFAULT 사용 (v2 simplify_billing_plan 으로
+-- plan CHECK 가 'prepaid_v2' 단일값이 됐기 때문에 명시값 INSERT 시 충돌 회피).
 INSERT INTO billing.orgs (
   id,
   name,
   business_reg_no,
-  plan,
-  infra_mode,
-  billing_mode,
-  status,
   credit_limit_krw,
   is_internal
 ) VALUES (
   '00000000-0000-0000-0000-000000000001'::uuid,
   'Gridge (internal)',
   'gridge-self-internal',
-  'monthly',
-  'A',
-  'D',
-  'active',
   0,                      -- 자체 운영 — 한도 없음
   TRUE
 ) ON CONFLICT (id) DO NOTHING;
