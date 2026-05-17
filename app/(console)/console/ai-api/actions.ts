@@ -186,6 +186,14 @@ export async function updateProduct(formData: FormData) {
   const dailyTokenCapRaw = num(formData.get('daily_token_cap'), -1)
   const dailyTokenCap = dailyTokenCapRaw < 0 ? null : dailyTokenCapRaw
 
+  // M-2057: 가격 정책 분리 — upstream USD / 환율 / markup
+  const upstreamInputUsd = Math.max(0, num(formData.get('upstream_input_price_per_1k_usd'), 0))
+  const upstreamOutputUsd = Math.max(0, num(formData.get('upstream_output_price_per_1k_usd'), 0))
+  const fxRateRaw = formData.get('fx_rate_krw_per_usd') as string | null
+  const fxRate = fxRateRaw && fxRateRaw.trim() !== '' ? Math.max(0, Number(fxRateRaw)) : null
+  const markupPct = Math.max(0, Math.min(1000, num(formData.get('markup_pct'), 0)))
+  const markupFixedKrw = Math.max(0, num(formData.get('markup_fixed_krw'), 0))
+
   if (displayName.length < 2) {
     redirect(`${back}?error=` + encodeURIComponent('상품명을 2자 이상 입력해 주세요.'))
   }
@@ -197,7 +205,7 @@ export async function updateProduct(formData: FormData) {
 
   const { data: before } = await service
     .from('gridge_api_products')
-    .select('id, code, display_name, input_price_per_1k_krw, output_price_per_1k_krw, rate_limit_rpm, daily_token_cap')
+    .select('id, code, display_name, input_price_per_1k_krw, output_price_per_1k_krw, upstream_input_price_per_1k_usd, upstream_output_price_per_1k_usd, fx_rate_krw_per_usd, markup_pct, markup_fixed_krw, rate_limit_rpm, daily_token_cap')
     .eq('id', productId)
     .maybeSingle()
   if (!before) {
@@ -213,6 +221,12 @@ export async function updateProduct(formData: FormData) {
         upstream_admin_token_id: upstreamTokenId,
         input_price_per_1k_krw: inputPrice,
         output_price_per_1k_krw: outputPrice,
+        upstream_input_price_per_1k_usd: upstreamInputUsd,
+        upstream_output_price_per_1k_usd: upstreamOutputUsd,
+        fx_rate_krw_per_usd: fxRate,
+        markup_pct: markupPct,
+        markup_fixed_krw: markupFixedKrw,
+        pricing_updated_at: new Date().toISOString(),
         min_charge_krw: minCharge,
         rate_limit_rpm: rateLimit,
         daily_token_cap: dailyTokenCap,
@@ -237,12 +251,22 @@ export async function updateProduct(formData: FormData) {
           display_name: before.display_name,
           input_price: before.input_price_per_1k_krw,
           output_price: before.output_price_per_1k_krw,
+          upstream_input_usd: before.upstream_input_price_per_1k_usd,
+          upstream_output_usd: before.upstream_output_price_per_1k_usd,
+          fx_rate: before.fx_rate_krw_per_usd,
+          markup_pct: before.markup_pct,
+          markup_fixed_krw: before.markup_fixed_krw,
           rate_limit_rpm: before.rate_limit_rpm,
         },
         after: {
           display_name: displayName,
           input_price: inputPrice,
           output_price: outputPrice,
+          upstream_input_usd: upstreamInputUsd,
+          upstream_output_usd: upstreamOutputUsd,
+          fx_rate: fxRate,
+          markup_pct: markupPct,
+          markup_fixed_krw: markupFixedKrw,
           rate_limit_rpm: rateLimit,
         },
       },

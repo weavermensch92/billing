@@ -434,6 +434,18 @@ Gridge AIMSP 4제품 중 Billing MSP (Mode D)
 | F-KEY-05 | `consume_key_issuance_quota` 원자 함수 + FOR UPDATE 락 |
 | F-KEY-06 | 임계 초과 차단 시 `key_issuance_events` blocked_by_quota=TRUE 기록 |
 
+### 7.10b F-PRC — 게이트웨이 가격 정책 (M-2057)
+
+| ID | 요구사항 |
+|---|---|
+| F-PRC-01 | **디폴트 = 마진 0% (pass-through).** 그릿지가 고객에게 제공하는 순수 벤더 API (Claude / OpenAI / ...) 는 원가 그대로 청구가 기본. 운영 정책상 필요 시 markup_pct / markup_fixed_krw 로 조정. |
+| F-PRC-02 | 가격 모델 분리: `upstream_input_price_per_1k_usd` (벤더 공식) + `fx_rate_krw_per_usd` (환율) + `markup_pct` + `markup_fixed_krw` (마진) |
+| F-PRC-03 | `pricing_source = manual` (운영자 직접 입력) / `vendor_fetch` (자동 계산: USD × fx × (1+markup)). 현재 manual 기본. |
+| F-PRC-04 | env / SQL 편집 없이 콘솔 `/console/ai-api/products/[id]` 에서 모든 가격 필드 편집 가능. |
+| F-PRC-05 | **외부 가격 기준 상시 fetch** (후속 PR): 벤더 공식 단가 + 한국수출입은행 환율 자동 갱신 → vendor_fetch 모드에서 자동 재계산. |
+| F-PRC-06 | 가격 변경은 이후 호출에만 적용. 과거 사용 이벤트는 `input_price_per_1k_krw_snapshot` 으로 보존. |
+| F-PRC-07 | 가격 정책 변경은 audit_logs `gridge_api_product_updated` (`visibility='internal_only'`) 기록 — before/after 전체 필드. |
+
 ### 7.10 F-TKN — 벤더 토큰 1회 등록
 
 | ID | 요구사항 |
