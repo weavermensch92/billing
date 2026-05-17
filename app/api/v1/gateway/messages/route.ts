@@ -201,10 +201,9 @@ export async function POST(req: Request) {
       upstream_vendor: product.upstream_vendor,
       upstream_request_id: (upstreamJson.id as string) ?? null,
       upstream_cost_usd: null, // PR #5 v2 에서 환율 계산 추가
-      // upstream_admin_token_id 는 usage_events 컬럼 추가 후 다음 PR 에서 박는다.
+      upstream_admin_token_id: upstreamTokenId, // M-2056 (PR #30) — NULL = env fallback
       wallet_ledger_id: walletLedgerId,
     })
-    void upstreamTokenId // PR #30 에서 사용 — 컬럼 추가 후 INSERT 에 박는다.
   } catch (err) {
     console.error('[gateway usage event]', err)
   }
