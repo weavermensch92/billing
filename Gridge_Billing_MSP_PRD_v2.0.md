@@ -493,6 +493,204 @@ v_fx_pnl_monthly 슈퍼어드민 전용 (RLS 차단)
 - 세금계산서 = Smart Bill·Popbill 연동 (Phase 2). Phase 1은 수동 발행 후 슬랙 ✅
 - 사업자등록증·세금계산서 담당자 정보는 orgs/org_contracts에 보관
 
+### 8.7 Gridge Gateway ↔ vendor_workspaces 통합 트랙 (Phase 1.5)
+
+PR #18~22 로 선행 구축된 **Gridge AI Gateway** (`api.gridge.ai` — 그릿지 자체 게이트웨이 + 마진 재청구) 를 §6 벤더 워크스페이스 모델로 흡수하는 작업 패키지. Phase 1 (M-2001~2005) 완료 후 별도 트랙 (M-2050~2055) 으로 진행.
+
+#### 8.7.1 통합 이유
+
+| 통합 전 | 통합 후 |
+|---|---|
+| `gridge_api_keys.org_id` 만 — 워크스페이스 개념 부재 | `gridge_api_keys.workspace_id` → 워크스페이스 단위 묶음 |
+| upstream 호출 키 = `process.env.ANTHROPIC_API_KEY` 전역 | upstream admin token = 그릿지 self org 의 vendor_workspace 소속 |
+| 사용량 집계 = key 단위 | 사용량 집계 = **워크스페이스 단위** (Q1 청구 단위와 동일) |
+| 청구서 라인 아이템이 게이트웨이/벤더 직접 결제 별도 처리 | 동일한 vendor_invoices 흐름으로 통합 |
+
+#### 8.7.2 마이그레이션 단위 (M-2050~2055)
+
+**M-2050 — `services.kind` 컬럼 + 게이트웨이 row**
+
+```sql
+ALTER TABLE billing.services
+  ADD COLUMN kind text NOT NULL DEFAULT 'vendor_passthrough'
+    CHECK (kind IN ('vendor_passthrough','gridge_gateway','subscription'));
+
+INSERT INTO billing.services (id, vendor, name, kind, status)
+VALUES ('gridge_gateway_v1', 'gridge', 'Gridge AI Gateway', 'gridge_gateway', 'active');
+```
+
+- `vendor_passthrough` = 고객이 벤더에 직접 (ChatGPT Team, Claude Team 등)
+- `gridge_gateway` = 고객이 그릿지 게이트웨이 경유 → 그릿지가 upstream 벤더에 재호출
+- `subscription` = 개인 구독 (Q3 — M-2006 이후)
+
+**M-2051 — 게이트웨이 워크스페이스 자동 생성 함수**
+
+```sql
+CREATE FUNCTION billing.ensure_gateway_workspace(p_org_id uuid)
+RETURNS uuid LANGUAGE plpgsql AS $$
+DECLARE v_ws_id uuid;
+BEGIN
+  SELECT id INTO v_ws_id
+  FROM billing.vendor_workspaces
+  WHERE org_id = p_org_id AND service_id = 'gridge_gateway_v1';
+
+  IF v_ws_id IS NULL THEN
+    INSERT INTO billing.vendor_workspaces
+      (org_id, service_id, vendor_workspace_id, status, created_by_admin_id)
+    VALUES
+      (p_org_id, 'gridge_gateway_v1', 'gw-' || p_org_id::text, 'active', NULL)
+    RETURNING id INTO v_ws_id;
+  END IF;
+  RETURN v_ws_id;
+END;
+$$;
+```
+
+`vendor_workspace_id = 'gw-<org_uuid>'` — 외부 ID 가 아닌 내부 식별자지만 컬럼 의미는 동일.
+
+**M-2052 — `gridge_api_keys.workspace_id` FK + 백필**
+
+```sql
+ALTER TABLE billing.gridge_api_keys
+  ADD COLUMN workspace_id uuid REFERENCES billing.vendor_workspaces(id);
+
+UPDATE billing.gridge_api_keys k
+SET workspace_id = billing.ensure_gateway_workspace(k.org_id);
+
+ALTER TABLE billing.gridge_api_keys
+  ALTER COLUMN workspace_id SET NOT NULL;
+
+CREATE INDEX gridge_api_keys_workspace_idx
+  ON billing.gridge_api_keys (workspace_id);
+```
+
+**M-2053 — `gridge_api_usage_events.workspace_id` 백필**
+
+```sql
+ALTER TABLE billing.gridge_api_usage_events
+  ADD COLUMN workspace_id uuid REFERENCES billing.vendor_workspaces(id);
+
+UPDATE billing.gridge_api_usage_events e
+SET workspace_id = k.workspace_id
+FROM billing.gridge_api_keys k
+WHERE e.gridge_api_key_id = k.id;
+
+ALTER TABLE billing.gridge_api_usage_events
+  ALTER COLUMN workspace_id SET NOT NULL;
+
+CREATE INDEX gridge_api_usage_events_workspace_period_idx
+  ON billing.gridge_api_usage_events (workspace_id, occurred_at);
+```
+
+월 마감 집계가 워크스페이스 기준으로 단순화 — Q1 청구 흐름과 동일 단위.
+
+**M-2054 — `vendor_admin_tokens.workspace_id` (upstream 측)**
+
+```sql
+ALTER TABLE billing.vendor_admin_tokens
+  ADD COLUMN workspace_id uuid REFERENCES billing.vendor_workspaces(id);
+```
+
+직전 우려의 정확한 해결점. upstream admin token 도 vendor 측 워크스페이스 row 와 연결.
+
+예: `vendor_workspaces(vendor='anthropic', org_id=<gridge_self_org>, vendor_workspace_id='gridge-master-prod')` row 의 admin token.
+
+**M-2055 — `gridge_self_org` seed**
+
+```sql
+ALTER TABLE billing.orgs
+  ADD COLUMN IF NOT EXISTS is_internal boolean NOT NULL DEFAULT false;
+
+INSERT INTO billing.orgs (id, name, is_internal)
+VALUES ('00000000-0000-0000-0000-000000000001', 'Gridge (internal)', true)
+ON CONFLICT (id) DO NOTHING;
+```
+
+이 org 의 vendor_workspaces 가 upstream admin token 의 owner. RLS 에서 일반 고객 조회 제외.
+
+#### 8.7.3 코드 변경 영역
+
+**게이트웨이 라우트** (`src/app/api/v1/gateway/messages/route.ts` 등)
+
+```typescript
+// Before
+const upstream = process.env.ANTHROPIC_API_KEY;
+
+// After
+const apiKey = await resolveGridgeApiKey(authHeader);
+const upstreamToken = await resolveUpstreamToken(apiKey.workspace_id, 'anthropic');
+const upstream = decrypt(upstreamToken.encrypted_value);
+```
+
+`resolveUpstreamToken` = `vendor_admin_tokens` 에서 `vendor='anthropic'` + 그릿지 self org 의 워크스페이스의 active token 1개 선택 (라운드로빈/우선순위 정책은 별도).
+
+**사용량 기록** (`recordGridgeApiUsage`)
+
+```typescript
+await supabase.from('gridge_api_usage_events').insert({
+  gridge_api_key_id: apiKey.id,
+  workspace_id: apiKey.workspace_id,     // NEW
+  upstream_admin_token_id: upstreamToken.id,
+  // ...
+});
+```
+
+**키 발급 API** (`POST /api/admin/gridge-api-keys`)
+
+키 발급 시 `ensure_gateway_workspace(org_id)` 호출 → 반환된 `workspace_id` 를 키에 박음.
+
+**청구 집계**
+
+월말 invoice 생성 시 게이트웨이 사용량을 워크스페이스 단위로 묶어 `vendor_invoices` 와 동일한 구조로 처리. `customer_invoices` 라인 아이템에 워크스페이스별 1줄로 통합.
+
+#### 8.7.4 의존성 / 순서
+
+```
+Phase 1 완료 (M-2001~2005)
+   ↓
+M-2050 (services.kind, gateway row)
+   ↓
+M-2051 (ensure_gateway_workspace 함수)
+   ↓
+M-2055 (gridge_self_org seed) ──┐
+   ↓                            │ 병렬 가능
+M-2052 (gridge_api_keys.workspace_id) ──┐
+M-2054 (vendor_admin_tokens.workspace_id) ──┤
+   ↓                                       │
+M-2053 (usage_events.workspace_id) ←───────┘
+   ↓
+[코드 PR — 게이트웨이 라우트 재배선]
+```
+
+#### 8.7.5 외부 영향
+
+| 영역 | 영향 |
+|---|---|
+| 기존 `gridge_api_keys` row | 백필로 모두 워크스페이스에 묶임 — 외부 동작 변화 없음 |
+| 기존 `gridge_api_usage_events` | 동일하게 백필 |
+| 게이트웨이 API 응답 | 변화 없음 (내부 키 라우팅만 변경) |
+| `vendor_invoices` 스키마 | 변화 없음 (M-2005 에서 `workspace_id` FK 승격 완료 전제) |
+| `customer_invoices` 라인 아이템 포맷 | 게이트웨이 사용분이 워크스페이스별 1줄로 통합 — UI 검토 필요 |
+
+#### 8.7.6 게이트웨이 호출 1건의 두 워크스페이스 통과
+
+```
+[고객 멤버]
+    │ gridge_api_key  (= 고객 org 의 gw-<org> 워크스페이스 seat)
+    ▼
+[api.gridge.ai 게이트웨이]
+    │ vendor_admin_tokens
+    │ (= 그릿지 self org 의 anthropic 워크스페이스 admin token)
+    ▼
+[Anthropic Console / 그릿지 자체 워크스페이스]
+    ▼
+[Anthropic API]
+```
+
+- 첫 번째 워크스페이스 = **그릿지가 고객에게 청구** (마진 포함, customer_invoices)
+- 두 번째 워크스페이스 = **벤더가 그릿지에게 청구** (vendor_invoices)
+- 둘의 차액 = 게이트웨이 마진
+
 ---
 
 ## 9. UI / 페이지 구조
