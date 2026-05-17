@@ -93,6 +93,12 @@ export default async function ConsoleAiApiPage({
             🔑 Gridge 키
           </Link>
           <Link
+            href="/console/ai-api/gateway-tokens"
+            className="px-3 py-1.5 border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg"
+          >
+            🛂 Upstream 토큰
+          </Link>
+          <Link
             href="/console/ai-api/products/new"
             className="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg"
           >
