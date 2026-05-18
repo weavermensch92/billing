@@ -23,6 +23,8 @@ export async function issueApiKey(formData: FormData) {
   const vendorWorkspaceId = String(formData.get('vendor_workspace_id') ?? '')
   const keyLabel = formData.get('key_label') as string | null
   const approvedByOrgAdmin = String(formData.get('approved_by_org_admin') ?? member.id)
+  const teamIdRaw = String(formData.get('team_id') ?? '')
+  const teamId = teamIdRaw === '' ? null : teamIdRaw
 
   if (!accountId || !vendor || !vendorWorkspaceId) {
     redirect(`/billing/api-keys?error=${encodeURIComponent('필수 입력 누락')}`)
@@ -33,6 +35,19 @@ export async function issueApiKey(formData: FormData) {
     redirect(`/billing/api-keys?error=${encodeURIComponent('일반 멤버는 자가 승인 불가. 어드민 승인 필요.')}`)
   }
 
+  // team_id 가 지정됐으면 해당 팀이 본인 org 소속인지 검증
+  if (teamId) {
+    const { data: team } = await supabase
+      .from('teams')
+      .select('id')
+      .eq('id', teamId)
+      .eq('org_id', member.org_id)
+      .maybeSingle()
+    if (!team) {
+      redirect(`/billing/api-keys?error=${encodeURIComponent('유효하지 않은 팀입니다.')}`)
+    }
+  }
+
   const result = await submitKeyIssuance(supabase as never, {
     orgId: member.org_id,
     requesterId: member.id,
@@ -41,6 +56,7 @@ export async function issueApiKey(formData: FormData) {
     vendorWorkspaceId,
     approvedByOrgAdmin,
     keyLabel: keyLabel ?? undefined,
+    teamId,
   })
 
   if (!result.ok) {

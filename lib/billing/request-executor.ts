@@ -369,6 +369,7 @@ async function executeKeyIssuance(supabase: SBLike, req: ActionRequestRow): Prom
       requestedByMemberId: req.member_id,
       approvedByOrgAdminMemberId: req.resolved_by ?? req.member_id,
       keyLabel: typeof rd.key_label === 'string' ? rd.key_label : undefined,
+      teamId: typeof rd.team_id === 'string' && rd.team_id ? rd.team_id : null,
     })
 
     // keyValueOnce는 응답 detail에만, DB·로그에는 저장 안 함
