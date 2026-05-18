@@ -115,6 +115,12 @@ Super 전용.
 - 드롭다운에서 선택 → "연결" 클릭.
 - 매칭 후보가 없으면 워크스페이스를 먼저 등록.
 
+### 단계별 절차 — 정합성 헬스 모니터링
+- 페이지 상단의 3개 카드:
+  - **미연결 청구서**: `vendor_invoices.workspace_id` 가 NULL + `source_type='account_invoice'` 인 행 수. > 0 이면 위 절차로 정리.
+  - **토큰 정합성**: active/rotated 토큰 중 `workspace_id` NULL. DB CHECK 가드가 있으므로 항상 **0** 이어야 함. 0 이 아니면 마이그레이션 실패 의심 — Slack 으로 알림.
+  - **Upstream 토큰 미기록**: 최근 7일 게이트웨이 호출 중 `upstream_admin_token_id` 가 NULL 인 비율. env fallback 이 활성인 동안은 높을 수 있음. 점진적으로 0% 수렴이 목표.
+
 ### 주의사항
 - 같은 (service, vendor_workspace_id) 중복 등록 시 거부 (UNIQUE 제약).
 - 상태 변경 시 자동으로 audit_logs 기록 (visibility=internal_only).
