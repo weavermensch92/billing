@@ -142,6 +142,11 @@ export const mockOpenaiAdapter: VendorAdapter = {
     }
   },
 
+  async deleteApiKey() {
+    await mockDelay()
+    return { ok: true, httpStatus: 204, isMock: true }
+  },
+
   async getInvoices(input: GetInvoicesInput): Promise<GetInvoicesResult> {
     await mockDelay()
     const invoiceId = mockId('inv', input.vendorWorkspaceId + ':' + input.periodStart)

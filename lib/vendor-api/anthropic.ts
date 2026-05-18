@@ -282,6 +282,31 @@ export const anthropicAdapter: VendorAdapter = {
     }
   },
 
+  async deleteApiKey(input) {
+    const orgId = process.env.ANTHROPIC_ORG_ID
+    if (!orgId) {
+      return { ok: false, error: 'ANTHROPIC_ORG_ID env missing' }
+    }
+    // 추정 endpoint — TODO: Anthropic 공식 문서 확인 후 수정. createApiKey 와 대칭 가정.
+    const url = `${BASE}/organizations/${orgId}/workspaces/${input.vendorWorkspaceId}/api_keys/${input.providerKeyId}`
+    try {
+      const res = await fetch(url, {
+        method: 'DELETE',
+        headers: {
+          'x-api-key': input.adminToken,
+          'anthropic-version': VERSION,
+        },
+      })
+      // 404 = 이미 벤더 측 삭제됨. 그릿지 입장에서는 성공으로 간주.
+      if (res.ok || res.status === 404) {
+        return { ok: true, httpStatus: res.status }
+      }
+      return { ok: false, httpStatus: res.status, error: `HTTP ${res.status}: ${await res.text()}` }
+    } catch (e) {
+      return { ok: false, error: String(e) }
+    }
+  },
+
   async getInvoices(input: GetInvoicesInput): Promise<GetInvoicesResult> {
     const orgId = process.env.ANTHROPIC_ORG_ID
     if (!orgId) {

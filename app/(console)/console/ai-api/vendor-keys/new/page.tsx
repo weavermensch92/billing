@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { issueVendorKeyOnBehalf } from '../actions'
+import { listVendors } from '@/lib/vendor-api/catalog'
 
 type AccountWithRefs = {
   id: string
@@ -50,7 +51,13 @@ export default async function NewVendorKeyPage({
     .not('provider_workspace_id', 'is', null)
     .order('org_id')
     .limit(300)
-  const accounts = (accountsRaw ?? []) as unknown as AccountWithRefs[]
+  const allAccounts = (accountsRaw ?? []) as unknown as AccountWithRefs[]
+
+  // 어댑터 미지원 벤더(예: cursor)의 account 는 발급 불가 → 선택지에서 제외.
+  // 진실의 원천: lib/vendor-api/catalog.ts (어댑터 등록 상태에서 자동 파생)
+  const supportedVendors = new Set(listVendors().filter(v => v.status !== 'unsupported').map(v => v.name))
+  const accounts = allAccounts.filter(a => a.service?.vendor && supportedVendors.has(a.service.vendor as never))
+  const hiddenUnsupportedCount = allAccounts.length - accounts.length
 
   // 승인자 후보 (각 Org 의 Owner/Admin)
   const { data: approversRaw } = await supabase
@@ -82,6 +89,12 @@ export default async function NewVendorKeyPage({
       {accounts.length === 0 && (
         <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
           발급 가능한 active 계정이 없습니다. provider_workspace_id 가 채워진 active 계정만 표시됩니다.
+        </div>
+      )}
+
+      {hiddenUnsupportedCount > 0 && (
+        <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-600">
+          벤더 어댑터 미구현으로 {hiddenUnsupportedCount} 개 계정이 목록에서 제외됨 (예: Cursor — 준비중).
         </div>
       )}
 

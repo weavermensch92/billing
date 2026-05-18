@@ -263,6 +263,25 @@ export const openaiAdapter: VendorAdapter = {
     }
   },
 
+  async deleteApiKey(input) {
+    // OpenAI Admin API: DELETE /v1/organization/projects/:project_id/service_accounts/:service_account_id
+    const url = `${BASE}/organization/projects/${input.vendorWorkspaceId}/service_accounts/${input.providerKeyId}`
+    try {
+      const res = await fetch(url, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${input.adminToken}`,
+        },
+      })
+      if (res.ok || res.status === 404) {
+        return { ok: true, httpStatus: res.status }
+      }
+      return { ok: false, httpStatus: res.status, error: `HTTP ${res.status}: ${await res.text()}` }
+    } catch (e) {
+      return { ok: false, error: String(e) }
+    }
+  },
+
   async getInvoices(input: GetInvoicesInput): Promise<GetInvoicesResult> {
     // OpenAI Costs API: /v1/organization/costs (project 별 비용 — invoice 와 유사)
     // 정확한 schema 는 OpenAI 문서 확인 필요. 본 구현은 best-effort.
