@@ -96,18 +96,50 @@ Finance / Ops / Super.
 ### 언제 사용
 - 벤더 측 워크스페이스 (Anthropic Console / OpenAI Platform 등) 정보를 그릿지에 등록 / 관리.
 - 신규 고객 온보딩 시 벤더 워크스페이스 생성 직후.
+- 청구서가 워크스페이스 매칭에 실패한 케이스를 정리할 때.
 
 ### 누가
 Super 전용.
 
-### 단계별 절차
+### 단계별 절차 — 신규 등록
 1. "+ 새 워크스페이스" 클릭 (Super 만 보임).
 2. Org / Service / Workspace ID / 표시명 / 상태 입력.
-3. 등록 후 목록에서 인라인 상태 변경 (active / suspended / terminated).
+3. 등록 후 목록에서 표시명 클릭 → 상세 페이지로 진입.
+
+### 단계별 절차 — 상태 변경
+- 목록에서 행 우측 인라인 select 로 active / suspended / terminated 변경 → "변경" 클릭.
+
+### 단계별 절차 — 미연결 청구서 정리
+- 상단에 ⚠ 알림이 보이면 클릭 → `/console/workspaces/unlinked-invoices` 진입.
+- 청구서별로 매칭 후보 워크스페이스가 자동 필터링됨 (같은 org + 같은 vendor).
+- 드롭다운에서 선택 → "연결" 클릭.
+- 매칭 후보가 없으면 워크스페이스를 먼저 등록.
 
 ### 주의사항
 - 같은 (service, vendor_workspace_id) 중복 등록 시 거부 (UNIQUE 제약).
 - 상태 변경 시 자동으로 audit_logs 기록 (visibility=internal_only).
+- 청구서를 워크스페이스에 한 번 연결하면 **재할당 불가** (M-2005 트리거). 잘못 연결하면 별도 보정 절차 필요.
+
+
+## /console/workspaces/[id] {#workspace-detail}
+
+### 언제 사용
+- 특정 워크스페이스에 연결된 카드 / 청구서 / 토큰 / 멤버를 한 화면에서 확인.
+- 신규 고객 온보딩 후 모든 자원이 올바르게 매핑됐는지 점검.
+
+### 누가
+모든 콘솔 사용자가 조회 가능. 토큰 관리는 Super 전용.
+
+### 단계별 절차
+1. `/console/workspaces` 목록에서 표시명 클릭.
+2. 상단 KPI 카드 (멤버 / 카드 / 청구서 / 토큰 수) 확인.
+3. 각 섹션 (토큰 / 카드 / 청구서 / 멤버) 별 상세 데이터 검토.
+4. 우상단 "토큰 관리" → 해당 org 의 `/console/orgs/[id]/vendor-tokens` 로 이동.
+
+### 주의사항
+- 카드는 `card_kind='workspace_card'` 인 것만 표시 (`account_card` 는 멤버 단위라 워크스페이스에 연결되지 않음).
+- 청구서는 `workspace_id=this` 인 것만. 매칭 실패 청구서는 `/console/workspaces/unlinked-invoices`.
+- 토큰은 M-2054 매핑으로 `vendor_admin_tokens.workspace_id=this` 인 것만.
 
 
 ## /console/ai-api {#ai-api}

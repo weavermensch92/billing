@@ -38,18 +38,25 @@ export default async function WorkspacesPage({
     .maybeSingle()
   if (!admin) redirect('/console/login')
 
-  const { data: rows } = await supabase
-    .from('vendor_workspaces')
-    .select(`
-      id, org_id, vendor_workspace_id, display_name, status, created_at,
-      org:orgs ( name ),
-      service:services ( name, vendor ),
-      members:workspace_members ( id, left_at )
-    `)
-    .order('created_at', { ascending: false })
-    .limit(200)
+  const [wsRes, unlinkedRes] = await Promise.all([
+    supabase
+      .from('vendor_workspaces')
+      .select(`
+        id, org_id, vendor_workspace_id, display_name, status, created_at,
+        org:orgs ( name ),
+        service:services ( name, vendor ),
+        members:workspace_members ( id, left_at )
+      `)
+      .order('created_at', { ascending: false })
+      .limit(200),
+    // v_vendor_invoices_unlinked 뷰 — M-2005 매칭 실패 청구서
+    supabase
+      .from('v_vendor_invoices_unlinked')
+      .select('id', { count: 'exact', head: true }),
+  ])
 
-  const list = (rows ?? []) as WorkspaceRow[]
+  const list = (wsRes.data ?? []) as WorkspaceRow[]
+  const unlinkedInvoices = unlinkedRes.count ?? 0
   const activeCount = list.filter((r) => r.status === 'active').length
   const totalMemberCount = list.reduce(
     (sum, r) => sum + r.members.filter((m) => m.left_at === null).length,
@@ -74,6 +81,15 @@ export default async function WorkspacesPage({
               ? `"${decodeURIComponent(searchParams.created)}" 워크스페이스가 등록됐습니다.`
               : decodeURIComponent(searchParams.ok ?? '')}
         </div>
+      )}
+
+      {unlinkedInvoices > 0 && (
+        <Link
+          href="/console/workspaces/unlinked-invoices"
+          className="block border-l-[3px] border-l-orange-500 pl-3 py-2 text-sm text-orange-700 bg-orange-50 hover:bg-orange-100"
+        >
+          ⚠ 워크스페이스 매칭 실패 청구서 {unlinkedInvoices} 건 — 클릭해 수동 정리 →
+        </Link>
       )}
 
       <div className="flex items-center justify-between">
@@ -133,7 +149,11 @@ export default async function WorkspacesPage({
                 <td className="py-2 px-3 font-mono text-xs text-gray-600">
                   {r.vendor_workspace_id}
                 </td>
-                <td className="py-2 px-3">{r.display_name}</td>
+                <td className="py-2 px-3">
+                  <Link href={`/console/workspaces/${r.id}`} className="hover:underline text-blue-700">
+                    {r.display_name}
+                  </Link>
+                </td>
                 <td className="py-2 px-3 text-right font-mono">{activeMembers}</td>
                 <td className="py-2 px-3">
                   <span className={`px-2 py-0.5 text-xs ${stat.color}`}>{stat.label}</span>
