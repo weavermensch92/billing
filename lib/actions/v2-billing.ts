@@ -183,6 +183,7 @@ export async function submitKeyIssuance(
     vendorWorkspaceId: string
     approvedByOrgAdmin: string  // members.id
     keyLabel?: string
+    teamId?: string | null      // NULL = org 전체용
   },
 ): Promise<ActionRequestOutput> {
   return createAndMaybeExecute(
@@ -197,6 +198,7 @@ export async function submitKeyIssuance(
         vendor: params.vendor,
         vendor_workspace_id: params.vendorWorkspaceId,
         key_label: params.keyLabel,
+        team_id: params.teamId ?? null,
       },
     },
     { autoExecute: true, resolvedBy: params.approvedByOrgAdmin },

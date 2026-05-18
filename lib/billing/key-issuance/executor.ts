@@ -44,6 +44,7 @@ export interface IssueKeyInput {
   requestedByMemberId: string      // 신청한 멤버
   approvedByOrgAdminMemberId: string  // 고객 어드민 (Q6 그릿지 미개입)
   keyLabel?: string
+  teamId?: string | null           // NULL = org 전체용 키, UUID = 팀 전용
 }
 
 export interface IssueKeyResult {
@@ -137,6 +138,7 @@ export async function issueKey(supabase: SBLike, input: IssueKeyInput): Promise<
     .insert({
       org_id: input.orgId,
       account_id: input.accountId,
+      team_id: input.teamId ?? null,
       provider: input.vendor,
       provider_key_id: providerKeyId,
       key_hash: hashKey(keyValueOnce),
