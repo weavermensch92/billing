@@ -38,7 +38,7 @@ export default async function WorkspacesPage({
     .maybeSingle()
   if (!admin) redirect('/console/login')
 
-  const [wsRes, unlinkedRes] = await Promise.all([
+  const [wsRes, unlinkedRes, integrityRes] = await Promise.all([
     supabase
       .from('vendor_workspaces')
       .select(`
@@ -53,10 +53,25 @@ export default async function WorkspacesPage({
     supabase
       .from('v_vendor_invoices_unlinked')
       .select('id', { count: 'exact', head: true }),
+    // v_workspace_integrity — Phase 1.6 정합성 헬스
+    supabase
+      .from('v_workspace_integrity')
+      .select('*')
+      .maybeSingle(),
   ])
 
   const list = (wsRes.data ?? []) as WorkspaceRow[]
   const unlinkedInvoices = unlinkedRes.count ?? 0
+  const integrity = (integrityRes.data ?? null) as {
+    tokens_active_unlinked: number
+    invoices_unlinked: number
+    usage_events_no_upstream_token: number
+    usage_events_recent_total: number
+  } | null
+  const fallbackPct =
+    integrity && integrity.usage_events_recent_total > 0
+      ? Math.round((integrity.usage_events_no_upstream_token / integrity.usage_events_recent_total) * 100)
+      : 0
   const activeCount = list.filter((r) => r.status === 'active').length
   const totalMemberCount = list.reduce(
     (sum, r) => sum + r.members.filter((m) => m.left_at === null).length,
@@ -80,6 +95,30 @@ export default async function WorkspacesPage({
             : searchParams.created
               ? `"${decodeURIComponent(searchParams.created)}" 워크스페이스가 등록됐습니다.`
               : decodeURIComponent(searchParams.ok ?? '')}
+        </div>
+      )}
+
+      {integrity && (
+        <div className="grid grid-cols-3 gap-3">
+          <HealthCard
+            label="미연결 청구서"
+            value={integrity.invoices_unlinked}
+            severity={integrity.invoices_unlinked > 0 ? 'warn' : 'ok'}
+            href={integrity.invoices_unlinked > 0 ? '/console/workspaces/unlinked-invoices' : undefined}
+            hint="수동 워크스페이스 매핑 필요"
+          />
+          <HealthCard
+            label="토큰 정합성"
+            value={integrity.tokens_active_unlinked}
+            severity={integrity.tokens_active_unlinked > 0 ? 'error' : 'ok'}
+            hint="active/rotated 토큰 중 workspace 미연결 (DB CHECK 가 차단 — 0 이어야 정상)"
+          />
+          <HealthCard
+            label="Upstream 토큰 미기록"
+            value={`${fallbackPct}%`}
+            severity={fallbackPct > 50 ? 'warn' : 'ok'}
+            hint={`최근 7일 사용 이벤트 ${integrity.usage_events_recent_total.toLocaleString('ko-KR')}건 중 env fallback`}
+          />
         </div>
       )}
 
@@ -198,4 +237,28 @@ export default async function WorkspacesPage({
       </div>
     </div>
   )
+}
+
+function HealthCard({
+  label, value, severity, href, hint,
+}: {
+  label: string
+  value: number | string
+  severity: 'ok' | 'warn' | 'error'
+  href?: string
+  hint?: string
+}) {
+  const sev = {
+    ok:    { ring: 'border-green-200',  text: 'text-green-700',  bg: 'bg-green-50' },
+    warn:  { ring: 'border-orange-200', text: 'text-orange-700', bg: 'bg-orange-50' },
+    error: { ring: 'border-red-200',    text: 'text-red-700',    bg: 'bg-red-50' },
+  }[severity]
+  const content = (
+    <div className={`border ${sev.ring} ${sev.bg} rounded-lg p-3`}>
+      <div className="text-xs text-gray-600">{label}</div>
+      <div className={`text-2xl font-mono mt-1 ${sev.text}`}>{value}</div>
+      {hint && <div className="text-[10px] text-gray-500 mt-1">{hint}</div>}
+    </div>
+  )
+  return href ? <Link href={href} className="block hover:opacity-80">{content}</Link> : content
 }
