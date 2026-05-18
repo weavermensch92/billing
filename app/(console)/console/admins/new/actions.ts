@@ -78,7 +78,7 @@ export async function inviteAdmin(formData: FormData) {
     const serviceRole = createServiceRoleClient()
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
     const inviteRes = await serviceRole.auth.admin.inviteUserByEmail(email, {
-      redirectTo: appUrl ? `${appUrl}/console/login` : undefined,
+      redirectTo: appUrl ? `${appUrl}/auth/callback` : undefined,
       data: { invited_role: roleRaw, invited_name: name },
     })
 

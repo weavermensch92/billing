@@ -80,15 +80,20 @@ export default function LoginPage({
             </button>
           </form>
 
-          <div className="mt-4 text-center text-xs">
+          <div className="mt-4 text-center text-xs space-y-1.5">
             {isMagicLinkMode ? (
-              <a href="/login" className="text-brand-600 hover:underline">
+              <a href="/login" className="block text-brand-600 hover:underline">
                 ← 비밀번호로 로그인
               </a>
             ) : (
-              <a href="/login?mode=magic-link" className="text-brand-600 hover:underline">
-                비밀번호를 잊으셨나요? 매직 링크로 로그인
-              </a>
+              <>
+                <a href="/reset-password/request" className="block text-brand-600 hover:underline">
+                  비밀번호 재설정
+                </a>
+                <a href="/login?mode=magic-link" className="block text-gray-500 hover:underline">
+                  또는 매직 링크로 로그인
+                </a>
+              </>
             )}
           </div>
 

@@ -17,8 +17,10 @@ import type { EmailOtpType } from '@supabase/supabase-js'
  *     Supabase Dashboard → Email Templates 에서 링크를 (b) 형식으로 변경 필요.
  *
  * 분기:
- *   - admin_users → /console/home
- *   - active member → /home (또는 ?next)
+ *   - ?next 가 명시되면 우선 (예: recovery → /reset-password/confirm)
+ *   - admin_users 매칭 + 첫 로그인 → /console/accept-invite (비번 설정)
+ *   - admin_users 매칭 → /console/home
+ *   - active member → /home
  *   - 그 외 (초대 수락 필요) → /accept-invite
  */
 export async function GET(request: Request) {
@@ -64,6 +66,13 @@ export async function GET(request: Request) {
     )
   }
 
+  // ?next 가 명시된 경우 (recovery / 명시적 라우팅) 우선 처리.
+  // admin 의 reset → /console/reset-password/confirm
+  // 고객의 reset → /reset-password/confirm
+  if (next) {
+    return NextResponse.redirect(`${origin}${next}`)
+  }
+
   // admin 분기
   const { data: admin } = await supabase
     .from('admin_users')
@@ -73,7 +82,18 @@ export async function GET(request: Request) {
     .maybeSingle()
 
   if (admin) {
-    return NextResponse.redirect(`${origin}${next ?? '/console/home'}`)
+    // 첫 로그인 휴리스틱: created_at 과 last_sign_in_at 의 차이가 1분 이내면
+    // invite 직후 — 비번 설정 화면으로.
+    const created = new Date(user.created_at).getTime()
+    const lastSignIn = user.last_sign_in_at
+      ? new Date(user.last_sign_in_at).getTime()
+      : created
+    const isFirstSignIn = lastSignIn - created < 60_000
+
+    if (isFirstSignIn) {
+      return NextResponse.redirect(`${origin}/console/accept-invite`)
+    }
+    return NextResponse.redirect(`${origin}/console/home`)
   }
 
   // active member 면 /home
@@ -85,7 +105,7 @@ export async function GET(request: Request) {
     .maybeSingle()
 
   if (activeMember) {
-    return NextResponse.redirect(`${origin}${next ?? '/home'}`)
+    return NextResponse.redirect(`${origin}/home`)
   }
 
   // 그 외 — 초대 수락 / 비밀번호 설정 페이지
