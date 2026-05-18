@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { formatDate } from '@/lib/utils/format'
 import { revokeVendorKey } from './actions'
+import { listVendors, vendorLabel } from '@/lib/vendor-api/catalog'
 
 type ApiKey = {
   id: string
@@ -27,16 +28,6 @@ function statusBadge(status: ApiKey['status']) {
   if (status === 'active') return <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-0.5 rounded">활성</span>
   if (status === 'rotating') return <span className="text-xs font-medium text-yellow-700 bg-yellow-50 px-2 py-0.5 rounded">회전 중</span>
   return <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded">폐기됨</span>
-}
-
-const VENDOR_LABEL: Record<string, string> = {
-  anthropic: 'Anthropic',
-  openai: 'OpenAI',
-  google: 'Google',
-  cursor: 'Cursor',
-  github: 'GitHub',
-  perplexity: 'Perplexity',
-  codeium: 'Codeium',
 }
 
 export default async function VendorKeysPage({
@@ -107,7 +98,7 @@ export default async function VendorKeysPage({
       {searchParams.reveal_id && searchParams.reveal_key && (
         <div className="p-4 bg-yellow-50 border-2 border-yellow-300 rounded-lg space-y-2">
           <div className="text-sm font-bold text-yellow-900">
-            ⚠ {searchParams.vendor ? VENDOR_LABEL[searchParams.vendor] ?? searchParams.vendor : ''} 키 발급 완료
+            ⚠ {searchParams.vendor ? vendorLabel(searchParams.vendor) : ''} 키 발급 완료
             — 이 화면을 벗어나면 다시 볼 수 없습니다
           </div>
           <div className="text-xs text-yellow-900">
@@ -149,7 +140,11 @@ export default async function VendorKeysPage({
           <label className="block text-gray-500 mb-1">벤더</label>
           <select name="vendor" defaultValue={vendorFilter} className="px-3 py-1.5 border border-gray-300 rounded-lg bg-white">
             <option value="">전체</option>
-            {Object.entries(VENDOR_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+            {listVendors().map(v => (
+              <option key={v.name} value={v.name}>
+                {v.label}{v.status === 'unsupported' ? ' (준비중)' : ''}
+              </option>
+            ))}
           </select>
         </div>
         <div>
@@ -200,7 +195,7 @@ export default async function VendorKeysPage({
                   </Link>
                 </td>
                 <td className="px-4 py-2 text-xs">
-                  <div className="font-medium">{VENDOR_LABEL[k.provider] ?? k.provider}</div>
+                  <div className="font-medium">{vendorLabel(k.provider)}</div>
                   <div className="text-gray-500">{k.account?.service?.name ?? '?'}</div>
                 </td>
                 <td className="px-4 py-2 text-xs">

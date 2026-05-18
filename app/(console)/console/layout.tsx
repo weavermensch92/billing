@@ -13,6 +13,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/console/ai-api',             label: 'AI API 관리', superOnly: true },
   { href: '/console/integrations/slack', label: 'Slack 연동', superOnly: true },
   { href: '/console/admins',             label: '관리자 계정', superOnly: true },
+  { href: '/console/manual',             label: '사용 설명서' },
 ]
 
 export default async function ConsoleLayout({ children }: { children: React.ReactNode }) {

@@ -97,6 +97,14 @@ export default async function OrgDetailPage({
         </div>
         <div className="flex items-center gap-3">
           <StatusBadge status={orgData.status} />
+          {adminUser?.role === 'super' && (
+            <Link
+              href={`/console/orgs/${params.id}/vendor-tokens`}
+              className="text-sm border border-gray-300 px-3 py-1.5 rounded-lg hover:bg-gray-50"
+            >
+              벤더 토큰
+            </Link>
+          )}
           {(adminUser?.role === 'super' || adminUser?.role === 'am') && (
             <Link
               href={`/console/orgs/${params.id}/requests/new`}

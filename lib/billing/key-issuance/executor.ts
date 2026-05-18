@@ -173,30 +173,97 @@ export async function issueKey(supabase: SBLike, input: IssueKeyInput): Promise<
   }
 }
 
-/** 키 삭제 (즉시 재발행 호출은 별도 issueKey 호출) */
+/**
+ * 키 삭제.
+ *
+ * 흐름:
+ *   1) DB 에서 api_keys row 조회 (provider, provider_key_id, account vendor_workspace 등)
+ *   2) 벤더 admin 토큰 복호화 시도 → 어댑터 deleteApiKey 호출
+ *      - 성공 / 404 (이미 삭제) → 정상 진행
+ *      - 실패 → 그릿지 DB 폐기는 계속 진행 (그릿지에서 더 이상 사용 불가하게 만드는 게 우선)
+ *        실패 사실은 key_issuance_events.detail.vendor_revoke_error 에 기록
+ *   3) api_keys status='revoked'
+ *   4) 'revoked' 이벤트 기록 (vendor_revoke 결과 포함)
+ */
 export async function revokeKey(
   supabase: SBLike,
   params: { keyId: string; orgId: string; byMemberId: string; reason?: string },
 ): Promise<boolean> {
-  // 1) DB status 변경
+  // 1) DB 조회 — account 의 provider_workspace_id 까지 가져와야 벤더 호출 가능
   const { data: keyRow } = (await supabase
     .from('api_keys')
-    .select('id, account_id, provider, provider_key_id, status')
+    .select('id, account_id, provider, provider_key_id, status, account:accounts!account_id(provider_workspace_id)')
     .eq('id', params.keyId)
     .eq('org_id', params.orgId)
-    .maybeSingle()) as { data: { id: string; account_id: string; provider: string; provider_key_id: string; status: string } | null }
+    .maybeSingle()) as {
+      data: {
+        id: string
+        account_id: string
+        provider: string
+        provider_key_id: string
+        status: string
+        account: { provider_workspace_id: string | null } | null
+      } | null
+    }
 
   if (!keyRow || keyRow.status !== 'active') return false
 
-  // (벤더 측 키 삭제는 별도 adapter.deleteApiKey — TODO. 여기선 DB만.)
+  // 2) 벤더 측 삭제 — 토큰·어댑터·workspace 어느 하나라도 없으면 skip (실패 아님)
+  const vendorRevoke: {
+    attempted: boolean
+    ok: boolean
+    httpStatus?: number
+    error?: string
+    isMock?: boolean
+    skipReason?: 'no_token' | 'no_adapter' | 'no_workspace' | 'no_deleteApiKey'
+  } = { attempted: false, ok: false }
 
+  const vendorWorkspaceId = keyRow.account?.provider_workspace_id ?? null
+  if (!vendorWorkspaceId) {
+    vendorRevoke.skipReason = 'no_workspace'
+  } else {
+    const adapter = getVendorAdapter(keyRow.provider as VendorName)
+    if (!adapter) {
+      vendorRevoke.skipReason = 'no_adapter'
+    } else if (typeof adapter.deleteApiKey !== 'function') {
+      vendorRevoke.skipReason = 'no_deleteApiKey'
+    } else {
+      try {
+        const decrypted = await getDecryptedToken(supabase, {
+          orgId: params.orgId,
+          vendor: keyRow.provider,
+          vendorWorkspaceId,
+          usedFor: 'key_revoke',
+        })
+        if (!decrypted) {
+          vendorRevoke.skipReason = 'no_token'
+        } else {
+          vendorRevoke.attempted = true
+          const result = await adapter.deleteApiKey({
+            vendorWorkspaceId,
+            adminToken: decrypted.token,
+            providerKeyId: keyRow.provider_key_id,
+          })
+          vendorRevoke.ok = result.ok
+          vendorRevoke.httpStatus = result.httpStatus
+          vendorRevoke.error = result.error
+          vendorRevoke.isMock = result.isMock
+        }
+      } catch (e) {
+        vendorRevoke.attempted = true
+        vendorRevoke.error = String(e)
+      }
+    }
+  }
+
+  // 3) DB 폐기 (벤더 측 결과와 무관 — 그릿지 측은 항상 회수)
   const { error } = await supabase
     .from('api_keys')
     .update({ status: 'revoked', revoked_at: new Date().toISOString() })
     .eq('id', params.keyId)
   if (error) return false
 
-  // 이벤트
+  // 4) 이벤트 — vendor_revoke 결과를 detail 에 남김 (감사/후속 디버깅용)
   await recordEvent(supabase, {
     orgId: params.orgId,
     accountId: keyRow.account_id,
@@ -205,7 +272,10 @@ export async function revokeKey(
     vendor: keyRow.provider,
     vendorKeyId: keyRow.provider_key_id,
     blockedByQuota: false,
-    detail: { reason: params.reason ?? null },
+    detail: {
+      reason: params.reason ?? null,
+      vendor_revoke: vendorRevoke,
+    },
   })
 
   return true

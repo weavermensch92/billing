@@ -108,6 +108,21 @@ export interface CreateApiKeyResult {
   error?: string
 }
 
+export interface DeleteApiKeyInput {
+  vendorWorkspaceId: string
+  adminToken: string
+  /** createApiKey 응답에서 받아 billing.api_keys.provider_key_id 에 저장한 벤더 측 식별자 */
+  providerKeyId: string
+}
+
+export interface DeleteApiKeyResult {
+  ok: boolean
+  /** HTTP 상태 (성공/실패 모두). 벤더 측 이미 삭제된 키일 수 있어 404 도 ok 로 간주. */
+  httpStatus?: number
+  error?: string
+  isMock?: boolean
+}
+
 export interface GetInvoicesInput {
   vendorWorkspaceId: string
   adminToken: string
@@ -177,6 +192,7 @@ export interface VendorAdapter {
   // v2 신규 메서드 (동적 토큰·워크스페이스, 옵셔널)
   listWorkspaceMembers?(input: ListWorkspaceMembersInput): Promise<ListWorkspaceMembersResult>
   createApiKey?(input: CreateApiKeyInput): Promise<CreateApiKeyResult>
+  deleteApiKey?(input: DeleteApiKeyInput): Promise<DeleteApiKeyResult>
   getInvoices?(input: GetInvoicesInput): Promise<GetInvoicesResult>
   setWorkspacePolicy?(input: SetWorkspacePolicyInput): Promise<SetWorkspacePolicyResult>
 }
